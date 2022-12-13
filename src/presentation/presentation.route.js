@@ -7,11 +7,10 @@ const authMiddleware = require("../auth/auth.middleware");
 const isAuth = authMiddleware.isAuth;
 
 // declare route
-router.get("/", isAuth, presentationController.getMyPresentation);
-router.get("/:id", isAuth, presentationController.getPresentationById);
+router.get("/", isAuth, presentationController.getMyPrensent);
+router.get("/:id", isAuth, presentationController.getById);
 router.post("/", isAuth, presentationController.add);
 router.put("/:id", isAuth, presentationController.update);
-
 router.delete("/:id", isAuth, presentationController.deleteById);
 
 module.exports = router;
