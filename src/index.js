@@ -12,9 +12,9 @@ const userRouter = require("./user/user.route");
 const groupRouter = require("./group/group.route");
 const presentationRouter = require("./presentation/presentation.route");
 const slideRouter = require("./slide/slide.route");
-const {socketSetup} = require('./socket-server');
+const { socketSetup } = require("./socket-server");
 
-const session = require('express-session');
+const session = require("express-session");
 const logger = require("morgan");
 
 //config cors
