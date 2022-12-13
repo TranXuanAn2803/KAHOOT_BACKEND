@@ -65,7 +65,6 @@ app
   .listen(PORT)
   .on("error", (err) => {
     socketSetup();
-
     console.log("✘ Application failed to start");
     console.error("✘", err.message);
     process.exit(0);

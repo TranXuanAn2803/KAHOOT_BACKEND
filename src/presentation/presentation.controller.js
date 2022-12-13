@@ -20,6 +20,28 @@ const getMyPrensent = async (req, res) => {
         return res.status(400).send({message: "Error in database conection"})
     }
 };
+const getById = async (req, res) => {
+    const {id} = req.params;
+    const user = req.user;
+
+    try {
+        const presentation = await Presentation.findOne({_id: id}).populate({ path: 'created_by', model: User, select: 'username email' }).lean();
+        if (!presentation) 
+            return res.status(400).send("Presentation not found");
+        console.log(presentation);
+        if (String(presentation.created_by._id)!==String(user._id)) 
+        {
+            return res.status(400).send("You cannot access this presentation");
+        }
+        return res.status(200).send({ data: {...presentation} });
+
+    }
+    catch(err){
+        console.error(err);
+        return res.status(400).send({message: "Error in database conection"})
+    }
+};
+
 const add = async (req, res) => {
     const user = req.user;
     const {name}= req.body;
@@ -98,6 +120,6 @@ module.exports = {
     getMyPrensent,
     add,
     update,
-    deleteById
-
+    deleteById,
+    getById
 }

@@ -73,6 +73,7 @@ const getTotalAnswerBySlide =async(slideId)=>{
     }
     
 }
+
 module.exports = {
     addOptionsBySlide,
     addUserAnswer,
