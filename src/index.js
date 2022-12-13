@@ -12,10 +12,13 @@ const userRouter = require("./user/user.route");
 const groupRouter = require("./group/group.route");
 const presentationRouter = require("./presentation/presentation.route");
 const slideRouter = require("./slide/slide.route");
-const {socketSetup} = require('./socket-server');
+const { socketSetup } = require("./socket-server");
 
-const session = require('express-session');
+const session = require("express-session");
 const logger = require("morgan");
+
+const http = require("http");
+const httpServer = http.createServer(app);
 
 //config cors
 const corsOptions = {
@@ -61,15 +64,26 @@ app.use("/", (req, res) => {
   res.status(404).send({ url: req.originalUrl + " not found" });
 });
 
-app
+// app
+//   .listen(PORT)
+//   .on("error", (err) => {
+//     socketSetup();
+
+//     console.log("✘ Application failed to start");
+//     console.error("✘", err.message);
+//     process.exit(0);
+//   })
+//   .on("listening", () => {
+//     console.log(`Server start listening port: http://localhost:${PORT}`);
+//   });
+socketSetup(httpServer);
+httpServer
   .listen(PORT)
   .on("error", (err) => {
-    socketSetup();
-
     console.log("✘ Application failed to start");
     console.error("✘", err.message);
     process.exit(0);
   })
   .on("listening", () => {
-    console.log(`Server start listening port: http://localhost:${PORT}`);
+    console.log(`Server start listening port: https://localhost:${PORT}`);
   });
