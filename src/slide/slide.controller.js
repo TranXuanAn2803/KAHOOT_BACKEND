@@ -58,7 +58,7 @@ const updateMutiSlide = async (req, res) => {
             await addOptionsBySlide(slideId, s.options);
         })
         const slide = await Slide.insertMany(newSlides);          
-        return res.status(200).send({ data: {...slide} });
+        return res.status(200).send({ data: {...slide}, message:  `Add successfully muti slide`   });
     }
     catch(err){
         console.error(err)
@@ -73,7 +73,7 @@ const deleteById = async (req, res) => {
     try {
 
         await Presentation.deleteOne({ _id: id });
-        return res.status(200).send({ data: {...slide} });
+        return res.status(200).send({ data: {...slide}, message:  `Delete successfully slide id ${id}`  });
     }
     catch(err){
         console.error(err);

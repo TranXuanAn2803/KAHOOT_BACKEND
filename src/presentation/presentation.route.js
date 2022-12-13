@@ -12,5 +12,6 @@ router.get("/:id", isAuth, presentationController.getById);
 router.post("/", isAuth, presentationController.add);
 router.put("/:id", isAuth, presentationController.update);
 router.delete("/:id", isAuth, presentationController.deleteById);
+router.delete("/", isAuth, presentationController.bulkDelete);
 
 module.exports = router;
