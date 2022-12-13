@@ -11,7 +11,11 @@ const getMyPresentation = async (req, res) => {
     const present = await Presentation.find({ created_by: user._id })
       .sort({ createdAt: -1 })
       .lean();
-    return res.status(200).send({ presentationList: present });
+    present.forEach((present) => {
+      present.owner = user.name || user.username;
+      delete present.created_by;
+    });
+    return res.status(200).json({ presentationList: present });
   } catch (err) {
     console.error(err);
     return res.status(400).send({ message: "Error in database conection" });
@@ -39,16 +43,26 @@ const add = async (req, res) => {
     return res.status(400).send("User not found");
   }
   try {
-    const newPresent = {
-      _id: new Types.ObjectId(),
+    const existedPresentation = await Presentation.findOne({
       name: name,
-      link_code: Math.floor(Math.random() * 1000000000),
-      collaborators: [],
       created_by: user._id,
-    };
-    const present = await Presentation.create(newPresent);
+    });
 
-    return res.status(200).send({ data: { ...present } });
+    if (existedPresentation == null) {
+      const newPresent = {
+        _id: new Types.ObjectId(),
+        name: name,
+        link_code: Math.floor(Math.random() * 1000000000),
+        collaborators: [],
+        created_by: user._id,
+      };
+      var presentation = await Presentation.create(newPresent);
+      console.log(presentation);
+      presentation.owner = user.name;
+      delete presentation.created_by;
+      return res.status(200).send({ presentation: presentation });
+    }
+    return res.status(400).send({ message: `The presentation ${name} exist` });
   } catch (err) {
     console.error(err);
     return res.status(400).send({ message: "Error in database conection" });
