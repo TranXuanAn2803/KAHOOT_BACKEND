@@ -12,7 +12,7 @@ const getMyPrensent = async (req, res) => {
         );
     }
     try {
-        const present = await Presentation.find({created_by: user._id}).sort({ createdAt: -1 }).lean();
+        const present = await Presentation.find({created_by: user._id}).sort({ createdAt: -1 }).populate({ path: 'created_by', model: User, select: 'username email' }).lean();
         return res.status(200).send({ data: {...present} });
     }
     catch(err){
