@@ -12,8 +12,8 @@ const getMyPrensent = async (req, res) => {
         );
     }
     try {
-        const present = await Presentation.find({created_by: user._id}).sort({ createdAt: -1 }).populate({ path: 'created_by', model: User, select: 'username email' }).lean();
-        return res.status(200).send({ data: {...present} });
+        const present = await Presentation.find({created_by: user._id}).sort({ createdAt: -1 }).populate({ path: 'created_by', model: User, select: 'username email name' }).lean();
+        return res.status(200).send({ data: present });
     }
     catch(err){
         console.error(err);
@@ -24,7 +24,7 @@ const getById = async (req, res) => {
     const {id} = req.params;
     const user = req.user;
     try {
-        const presentation = await Presentation.findOne({_id: id}).populate({ path: 'created_by', model: User, select: 'username email' }).lean();
+        const presentation = await Presentation.findOne({_id: id}).populate({ path: 'created_by', model: User, select: 'username email name' }).lean();
         if (!presentation) 
             return res.status(400).send("Presentation not found");
         console.log(presentation);
@@ -32,7 +32,7 @@ const getById = async (req, res) => {
         {
             return res.status(400).send("You cannot access this presentation");
         }
-        return res.status(200).send({ data: {...presentation} });
+        return res.status(200).send({ data: presentation });
 
     }
     catch(err){
@@ -93,7 +93,7 @@ const update = async (req, res) => {
         }
         );
 
-        return res.status(200).send({ data: { ...present }, message:  `Update successfully presentation id ${id}` });
+        return res.status(200).send({ data: present , message:  `Update successfully presentation id ${id}` });
     } catch (err) {
         console.error(err);
         return res.status(400).send({ message: "Error in database conection" });
@@ -108,7 +108,7 @@ const deleteById = async (req, res) => {
         return res.status(400).send("You cannot access this presentation");
     try {
         const present = await Presentation.deleteOne({ _id: id });
-        return res.status(200).send({ data: { ...present },message:  `Delete successfully presentation id ${id}` });
+        return res.status(200).send({ data: present ,message:  `Delete successfully presentation id ${id}` });
     } catch (err) {
         console.error(err);
         return res.status(400).send({ message: "Error in database conection" });
@@ -126,7 +126,7 @@ const bulkDelete = async (req, res) => {
         return res.status(400).send("You cannot access some presentations");
     try {
         const present = await Presentation.deleteMany({ _id: id });
-        return res.status(200).send({ data: { ...present }, message:  `Delete successfully presentation in array ${id}`  });
+        return res.status(200).send({ data: present , message:  `Delete successfully presentation in array ${id}`  });
     } catch (err) {
         console.error(err);
         return res.status(400).send({ message: "Error in database conection" });

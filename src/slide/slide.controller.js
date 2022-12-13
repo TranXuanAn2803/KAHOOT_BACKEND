@@ -23,7 +23,7 @@ const getByPresent = async (req, res) => {
         }
         if(!slides||slides.length==0)
             return res.status(400).send("Slide not found");
-        return res.status(200).send({ data: {...slides} });
+        return res.status(200).send({ data: slides });
     }
     catch(err){
         console.error(err);
@@ -58,7 +58,7 @@ const updateMutiSlide = async (req, res) => {
             await addOptionsBySlide(slideId, s.options);
         })
         const slide = await Slide.insertMany(newSlides);          
-        return res.status(200).send({ data: {...slide}, message:  `Add successfully muti slide`   });
+        return res.status(200).send({ data: slide, message:  `Add successfully muti slide`   });
     }
     catch(err){
         console.error(err)
@@ -73,7 +73,7 @@ const deleteById = async (req, res) => {
     try {
 
         await Presentation.deleteOne({ _id: id });
-        return res.status(200).send({ data: {...slide}, message:  `Delete successfully slide id ${id}`  });
+        return res.status(200).send({ data: slide, message:  `Delete successfully slide id ${id}`  });
     }
     catch(err){
         console.error(err);
@@ -84,13 +84,13 @@ const test1 = async (req, res) => {
     const user = req.user;
     const {id} = req.params;
     const data = await addUserAnswer(user.username, id);
-    return res.status(200).send({ data: {...data} });
+    return res.status(200).send({ data: data});
 
 };
 const test2 = async (req, res) => {
     const {id} = req.params;
     const data = await getTotalAnswerBySlide(id)
-    return res.status(200).send({ data: {...data} });
+    return res.status(200).send({ data: data });
 };
 
 module.exports = {
