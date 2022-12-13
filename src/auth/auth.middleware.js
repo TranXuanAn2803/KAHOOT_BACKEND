@@ -9,8 +9,9 @@ const authMethod = require("./auth.method");
 
 exports.isAuth = async (req, res, next) => {
   // get access token from header
+  console.log("req.headers", req.headers);
   const accessTokenFromHeader = req.headers.x_authorization;
-
+  console.log("accesstoken from header ", accessTokenFromHeader);
   if (!accessTokenFromHeader) {
     return res.status(401).send("Cannot find access Token");
   }
@@ -21,6 +22,7 @@ exports.isAuth = async (req, res, next) => {
     accessTokenFromHeader,
     accessTokenSecret
   );
+  console.log("verified ", verified);
   // console.log("verified ", verified);
   if (!verified) {
     return res.status(401).send("Your access token cannot verify");
