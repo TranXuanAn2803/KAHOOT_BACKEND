@@ -2,7 +2,7 @@ const Presentation = require("./presentation.model");
 const { User } = require("../user/user.model");
 const { Types } = require("mongoose");
 
-const getMyPrensent = async (req, res) => {
+const getMyPresentation = async (req, res) => {
     const user = req.user;
     if (!user) {
         return res
@@ -95,7 +95,7 @@ const deleteById = async (req, res) => {
     }
 };
 module.exports = {
-    getMyPrensent,
+    getMyPresentation,
     add,
     update,
     deleteById

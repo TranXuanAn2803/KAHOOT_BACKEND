@@ -7,7 +7,7 @@ const authMiddleware = require("../auth/auth.middleware");
 const isAuth = authMiddleware.isAuth;
 
 // declare route
-router.get("/", isAuth, presentationController.getMyPrensent);
+router.get("/", isAuth, presentationController.getMyPresentation);
 router.post("/", isAuth, presentationController.add);
 router.put("/:id", isAuth, presentationController.update);
 
