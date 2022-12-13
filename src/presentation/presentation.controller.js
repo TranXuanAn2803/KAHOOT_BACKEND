@@ -17,6 +17,21 @@ const getMyPresentation = async (req, res) => {
     return res.status(400).send({ message: "Error in database conection" });
   }
 };
+const getPresentationById = async (req, res) => {
+  const user = req.user;
+  const { id } = req.params;
+  if (!user) {
+    return res.status(400).send("User not found");
+  }
+  try {
+    const present = await Presentation.findOne({ _id: id });
+    console.log("presentation found by id ", present);
+    return res.status(200).send(present);
+  } catch (err) {
+    console.error(err);
+    return res.status(400).send({ message: "Error in database conection" });
+  }
+};
 const add = async (req, res) => {
   const user = req.user;
   const { name } = req.body;
@@ -86,6 +101,7 @@ const deleteById = async (req, res) => {
 };
 module.exports = {
   getMyPresentation,
+  getPresentationById,
   add,
   update,
   deleteById,
