@@ -110,7 +110,7 @@ const updateMutiSlide = async (req, res) => {
                 }
         }
         let newSlides=[];
-        await slides.map(async(s)=>{
+        await uniqueSlide.map(async(s)=>{
                 const slideId = new Types.ObjectId();
                 newSlides.push({
                     _id: slideId,
