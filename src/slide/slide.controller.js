@@ -1,5 +1,5 @@
 const Slide = require("./slide.model");
-const {addOptionsBySlide, addUserAnswer, getTotalAnswerBySlide} = require("./option/option.method");
+const {addOptionsBySlide, addUserAnswer, getTotalAnswerBySlide, deleteBySlide} = require("./option/option.method");
 const Option = require("./option/option.model");
 const Presentation = require("../presentation/presentation.model");
 const { User } = require("../user/user.model");
@@ -59,7 +59,7 @@ const getById = async (req, res) => {
 
 const createSlide = async (req, res) => {
     const user = req.user;
-    const {question, presentation_id, index, options}= req.body;
+    const {question, presentation_id, index, options} = req.body;
     const presentation = await Presentation.findOne({_id: presentation_id});
     if (!presentation) 
         return res.status(400).send("Presentation not found");
@@ -67,7 +67,6 @@ const createSlide = async (req, res) => {
         return res.status(400).send("You cannot access this presentation");
     try {
         const exits = await Slide.find({presentation_id: presentation_id, index: index});
-        console.log(exits)
         if (exits&&exits.length>0) 
             return res.status(400).send("The index has been duplicated");
         const slideId = new Types.ObjectId();
@@ -98,9 +97,8 @@ const updateMutiSlide = async (req, res) => {
     const prevSlide = await Slide.find({presentation_id: id});
     try {
         if (prevSlide&&prevSlide.length> 0) {
-            prevSlide.map(async(p)=>{
-                await Slide.deleteOne({ _id: p._id });  
-            })
+            
+            await deleteByPresent(id)
         }
         const uniqueSlide=[];
         for(i=0;i<slides.length;i++)
@@ -112,14 +110,14 @@ const updateMutiSlide = async (req, res) => {
                 }
         }
         let newSlides=[];
-        slides.map(async(s)=>{
-            const slideId = new Types.ObjectId();
-            newSlides.push({
-                _id: slideId,
-                question: s.question,
-                presentation_id: id,
-                index: s.index,
-            })
+        await slides.map(async(s)=>{
+                const slideId = new Types.ObjectId();
+                newSlides.push({
+                    _id: slideId,
+                    question: s.question,
+                    presentation_id: id,
+                    index: s.index,
+                })
             await addOptionsBySlide(slideId, s.options);
         })
         const slide = await Slide.insertMany(newSlides);          
@@ -158,6 +156,26 @@ const test2 = async (req, res) => {
     const data = await getTotalAnswerBySlide(id)
     return res.status(200).send({ data: data });
 };
+const deleteByPresent = async (id) => {
+    try {
+        const presentation = await Presentation.findOne({_id: id});
+        if (!presentation) 
+            return false;
+        const slides = await Slide.find({presentation_id: id});
+        if (slides&&slides.length> 0) {
+            slides.map(async(s)=>{
+                await deleteBySlide(s._id);
+                await Slide.deleteOne({ _id: s._id });
+            })
+        }
+        return true;
+    }
+    catch(err){
+        console.error(err)
+        return false;
+    }
+
+};
 
 module.exports = {
     updateMutiSlide,
@@ -165,6 +183,5 @@ module.exports = {
     deleteById,
     createSlide,
     getById,
-    test1,
-    test2
+    deleteByPresent
 }
