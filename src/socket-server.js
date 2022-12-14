@@ -5,13 +5,12 @@ const PresentationControler = require("./presentation/presentation.controller");
 const { addUserAnswer, getTotalAnswerBySlide } = require("./slide/option/option.method");
 const { Server } = require("socket.io");
 
-// const io = socketIO(3001, {
-//     cors: {
-//         origin: '*',
-//     },
-// }).sockets;
-
 const socketSetup_ = () => {
+  const io = socketIO(3002, {
+    cors: {
+      origin: "*",
+    },
+  }).sockets;
   io.on("connection", (socket) => {
     socket.on("disconnect", (reason) => {
       console.log("Socket " + socket.id + " was disconnected");
