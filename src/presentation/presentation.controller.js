@@ -81,17 +81,17 @@ const update = async (req, res) => {
     if (String(presentation.created_by) !== String(user._id)) {
         return res.status(400).send("You cannot access this presentation");
     }
-    const { name, code } = req.body;
-
+    let { name, code, status } = req.body;
+    if(status) status= Math.max(Math.min(status,2),0);
     try {
         const present = await Presentation.updateOne(
         { _id: id },
         {
             name: name,
             link_code: code,
+            status: status,
         }
         );
-
         return res.status(200).send({ data: present , message:  `Update successfully presentation id ${id}` });
     } catch (err) {
         console.error(err);

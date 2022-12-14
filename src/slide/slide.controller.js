@@ -22,8 +22,6 @@ const getByPresent = async (req, res) => {
             const options=await Option.find({slide_id:s._id}).sort({ index: 1 }).lean();
             s.options=options;
         }
-        if(!slides||slides.length==0)
-            return res.status(400).send("Slide not found");
         return res.status(200).send({ data: slides });
     }
     catch(err){
