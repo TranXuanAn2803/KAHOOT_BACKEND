@@ -83,34 +83,29 @@ const add = async (req, res) => {
   }
 };
 const update = async (req, res) => {
-  const user = req.user;
-  const { id } = req.params;
-  const presentation = await Presentation.findOne({ _id: id });
-  if (!presentation) return res.status(400).send("Presentation not found");
-  if (String(presentation.created_by) !== String(user._id)) {
-    return res.status(400).send("You cannot access this presentation");
-  }
-  const { name, code } = req.body;
-
-  try {
-    const present = await Presentation.updateOne(
-      { _id: id },
-      {
-        name: name,
-        link_code: code,
-      }
-    );
-
-    return res
-      .status(200)
-      .send({
-        data: present,
-        message: `Update successfully presentation id ${id}`,
-      });
-  } catch (err) {
-    console.error(err);
-    return res.status(400).send({ message: "Error in database conection" });
-  }
+    const user = req.user;
+    const { id } = req.params;
+    const presentation = await Presentation.findOne({ _id: id });
+    if (!presentation) return res.status(400).send("Presentation not found");
+    if (String(presentation.created_by) !== String(user._id)) {
+        return res.status(400).send("You cannot access this presentation");
+    }
+    let { name, code, status } = req.body;
+    if(status) status= Math.max(Math.min(status,2),0);
+    try {
+        const present = await Presentation.updateOne(
+        { _id: id },
+        {
+            name: name,
+            link_code: code,
+            status: status,
+        }
+        );
+        return res.status(200).send({ data: present , message:  `Update successfully presentation id ${id}` });
+    } catch (err) {
+        console.error(err);
+        return res.status(400).send({ message: "Error in database conection" });
+    }
 };
 const deleteById = async (req, res) => {
   const user = req.user;
