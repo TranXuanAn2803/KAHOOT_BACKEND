@@ -8,10 +8,10 @@ const Slide = mongoose.model(
             type: String,
             required: true,
         },
-        type: {
-            type: Schema.Types.Number,
-            required: true,
-        },
+        // type: {
+        //     type: Schema.Types.Number,
+        //     required: true,
+        // },
         slide_type: {
             type: String,
             default: 'MULTIPLE_CHOICE',

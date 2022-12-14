@@ -31,15 +31,24 @@ const addOptionsBySlide = async (slideId, options) => {
         return false;
     }
 };
-const addUserAnswer = async(username, optionId)=>{
-    const option = await Option.findOne({_id:optionId});     
+const addUserAnswer = async(username, options)=>{
+    const option = await Option.findOne({_id: options});     
     if(!option)
     {
         console.error("option not found");        
     }
     try {
-        console.log({username:username,option_id: optionId})
-        const answer = await UserOption.create({username:username,option_id: optionId});     
+            let newAnswers=[];
+            options.map(async(option)=>{
+                newAnswers.push({
+                    _id: new Types.ObjectId(),
+                    username:username,
+                    option_id: option,
+                })
+            })
+
+        console.log(newAnswers)
+        const answer = await UserOption.insertMany(newAnswers);     
         console.log(answer)     
         return answer;
     }
@@ -52,7 +61,8 @@ const getTotalAnswerBySlide =async(slideId)=>{
     const slide = await Slide.findOne({_id:slideId});     
     if(!slide)
     {
-        console.error("Slide not found");        
+        console.error("Slide not found");
+        return false;                
     }
     try {
         const options = await Option.find({slide_id: slideId});
