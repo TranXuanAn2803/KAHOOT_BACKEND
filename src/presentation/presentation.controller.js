@@ -69,12 +69,10 @@ const add = async (req, res) => {
       console.log(presentation);
       presentation.owner = user.name;
       delete presentation.created_by;
-      return res
-        .status(200)
-        .send({
-          presentation: presentation,
-          message: `Add successfully presentation`,
-        });
+      return res.status(200).send({
+        presentation: presentation,
+        message: `Add successfully presentation`,
+      });
     }
     return res.status(400).send({ message: `The presentation ${name} exist` });
   } catch (err) {
@@ -90,17 +88,17 @@ const update = async (req, res) => {
   if (String(presentation.created_by) !== String(user._id)) {
     return res.status(400).send("You cannot access this presentation");
   }
-  const { name, code } = req.body;
-
+  let { name, code, status } = req.body;
+  if (status) status = Math.max(Math.min(status, 2), 0);
   try {
     const present = await Presentation.updateOne(
       { _id: id },
       {
         name: name,
         link_code: code,
+        status: status,
       }
     );
-
     return res
       .status(200)
       .send({
@@ -126,12 +124,10 @@ const deleteById = async (req, res) => {
     return res.status(400).send("You cannot access this presentation");
   try {
     const present = await Presentation.deleteOne({ _id: id });
-    return res
-      .status(200)
-      .send({
-        data: present,
-        message: `Delete successfully presentation id ${id}`,
-      });
+    return res.status(200).send({
+      data: present,
+      message: `Delete successfully presentation id ${id}`,
+    });
   } catch (err) {
     console.error(err);
     return res.status(400).send({ message: "Error in database conection" });
@@ -149,12 +145,10 @@ const bulkDelete = async (req, res) => {
     return res.status(400).send("You cannot access some presentations");
   try {
     const present = await Presentation.deleteMany({ _id: id });
-    return res
-      .status(200)
-      .send({
-        data: present,
-        message: `Delete successfully presentation in array ${id}`,
-      });
+    return res.status(200).send({
+      data: present,
+      message: `Delete successfully presentation in array ${id}`,
+    });
   } catch (err) {
     console.error(err);
     return res.status(400).send({ message: "Error in database conection" });

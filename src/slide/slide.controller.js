@@ -17,14 +17,16 @@ const getByPresent = async (req, res) => {
         );
     }
     try {
+        const presentation = await Presentation.findOne({_id: id}, { name: 1}).lean();
+        if (!presentation)
+            return res.status(400).send("Presentation not found");
         let slides = await Slide.find({presentation_id: id}).sort({ index: 1 }).lean();
         for(let s of slides){
             const options=await Option.find({slide_id:s._id}).sort({ index: 1 }).lean();
             s.options=options;
         }
-        if(!slides||slides.length==0)
-            return res.status(400).send("Slide not found");
-        return res.status(200).send({ data: slides });
+        presentation.slides=slides
+        return res.status(200).send({ data: presentation });
     }
     catch(err){
         console.error(err);
