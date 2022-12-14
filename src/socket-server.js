@@ -1,6 +1,8 @@
 const socketIO = require("socket.io");
 const Presentation = require("./presentation/presentation.model");
-const { addUserAnswer } = require("./slide/option/option.method");
+const PresentationControler = require("./presentation/presentation.controller");
+
+const { addUserAnswer, getTotalAnswerBySlide } = require("./slide/option/option.method");
 const { Server } = require("socket.io");
 
 const socketSetup_ = () => {
@@ -17,8 +19,8 @@ const socketSetup_ = () => {
     socket.on("init-game", async (pin, id, next) => {
       socket.join(game.pin);
       try {
-        let present = await Presentation.find({ _id: id, link_code: pin });
-        if (!present) next("present not found");
+        let present = await PresentationControler.validatePublicForm(id, pin);
+        if (!present||present.link_code!=pin) next("present not found");
         else {
           socket.join(id);
         }
@@ -29,22 +31,23 @@ const socketSetup_ = () => {
     });
     socket.on("start-game", async (id, next) => {
       try {
-        let present = await Presentation.find({ _id: id });
-        if (!present) next("present not found");
+        let present = await PresentationControler.validatePublicForm(id);
+            
+        if (!present) socket.to(id).emit("game-started", {status: "error", message:"Present not found"});
         else {
-          socket.to(id).emit("game-started", id);
+          socket.to(id).emit("game-started", {status: "succes", data:{id: id}});
         }
       } catch (err) {
         console.error(err);
-        next(err.message);
+        socket.to(id).emit("game-started", {status: "error", message:err.message});
       }
     });
     socket.on("next-slide", async (id, next) => {
       try {
-        let present = await Presentation.find({ _id: id });
-        if (!present) next("present not found");
-        else {
-          socket.to(id).emit("slide-changed");
+        let present = await PresentationControler.validatePublicForm(id);
+        if (!present) socket.to(id).emit("slide-changed", {status: "error", message:"Present not found"});
+        else {          
+          socket.to(id).emit("slide-changed", {status: "sucess", data:{}});
         }
       } catch (err) {
         console.error(err);
@@ -52,18 +55,19 @@ const socketSetup_ = () => {
       }
     });
 
-    socket.on("send-answer-to-host", async (id, slideId, username, next) => {
+    socket.on("send-answer-to-host", async (id, username, options) => {
       try {
-        let present = await Presentation.find({ _id: id });
+        let present = await PresentationControler.validatePublicForm(id);
         if (!present) {
-          next("present not found");
+          socket.to(id).emit("get-answer-from-player", {status: "error", message:"Present not found"});
           addUserAnswer(username, slideId);
         } else {
-          socket.to(id).emit("get-answer-from-player", username, slideId);
+          socket.to(id).emit("get-answer-from-player",  {status: "sucess", data:{username, options}});
         }
       } catch (err) {
         console.error(err);
-        next(err.message);
+        socket.to(id).emit("get-answer-from-player", {status: "error", message:err.message});
+
       }
     });
   });
@@ -83,8 +87,8 @@ const socketSetup = (httpServer) => {
     socket.on("init-game", async (pin, id, next) => {
       socket.join(game.pin);
       try {
-        let present = await Presentation.find({ _id: id, link_code: pin });
-        if (!present) next("present not found");
+        let present = await PresentationControler.validatePublicForm(id, pin);
+        if (!present||present.link_code!=pin) next("present not found");
         else {
           socket.join(id);
         }
@@ -95,41 +99,57 @@ const socketSetup = (httpServer) => {
     });
     socket.on("start-game", async (id, next) => {
       try {
-        let present = await Presentation.find({ _id: id });
-        if (!present) next("present not found");
+        let present = await PresentationControler.validatePublicForm(id);
+            
+        if (!present) socket.to(id).emit("game-started", {status: "error", message:"Present not found"});
         else {
-          socket.to(id).emit("game-started", id);
+          socket.to(id).emit("game-started", {status: "succes", data:{id: id}});
         }
       } catch (err) {
         console.error(err);
-        next(err.message);
+        socket.to(id).emit("game-started", {status: "error", message:err.message});
       }
     });
     socket.on("next-slide", async (id, next) => {
       try {
-        let present = await Presentation.find({ _id: id });
-        if (!present) next("present not found");
-        else {
-          socket.to(id).emit("slide-changed");
+        let present = await PresentationControler.validatePublicForm(id);
+        if (!present) socket.to(id).emit("slide-changed", {status: "error", message:"Present not found"});
+        else {          
+          socket.to(id).emit("slide-changed", {status: "sucess", data:{}});
         }
       } catch (err) {
         console.error(err);
         next(err.message);
       }
     });
-
-    socket.on("send-answer-to-host", async (id, slideId, username, next) => {
+    socket.on("show-result", async (id, slideId) => {
       try {
-        let present = await Presentation.find({ _id: id });
-        if (!present) {
-          next("present not found");
-          addUserAnswer(username, slideId);
-        } else {
-          socket.to(id).emit("get-answer-from-player", username, slideId);
+        let present = await PresentationControler.validatePublicForm(id);
+        if (!present) socket.to(id).emit("slide-result", {status: "error", message:"Present not found"});
+        else {          
+          let total = await getTotalAnswerBySlide(slideId)
+          if (!total) socket.to(id).emit("slide-result", {status: "error", message:"Error in getting slide result"});
+          else 
+            socket.to(id).emit("slide-result", {status: "sucess", data:{total}});
         }
       } catch (err) {
         console.error(err);
-        next(err.message);
+          if (!present) socket.to(id).emit("slide-result", {status: "error", message:err.message});
+      }
+    });
+
+    socket.on("send-answer-to-host", async (id, username, options) => {
+      try {
+        let present = await PresentationControler.validatePublicForm(id);
+        if (!present) {
+          socket.to(id).emit("get-answer-from-player", {status: "error", message:"Present not found"});
+          await addUserAnswer(username, slideId);
+        } else {
+          socket.to(id).emit("get-answer-from-player",  {status: "sucess", data:{username, options}});
+        }
+      } catch (err) {
+        console.error(err);
+        socket.to(id).emit("get-answer-from-player", {status: "error", message:err.message});
       }
     });
   });

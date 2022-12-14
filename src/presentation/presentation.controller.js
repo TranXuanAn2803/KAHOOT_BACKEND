@@ -60,7 +60,6 @@ const add = async (req, res) => {
         link_code: Math.floor(Math.random() * 1000000000),
         collaborators: [],
         created_by: user._id,
-        status: 1,
         };
         var presentation = await Presentation.create(newPresent);
         console.log(presentation);
@@ -89,7 +88,7 @@ const update = async (req, res) => {
         { _id: id },
         {
             name: name,
-            code: code,
+            link_code: code,
         }
         );
 
@@ -133,12 +132,18 @@ const bulkDelete = async (req, res) => {
     }
 
 };
+const validatePublicForm = async(id, pin)=>
+{
+    const presentation = await Presentation.findOne({ _id: id, status:  { $ne: 0 } });
+    return presentation;
 
+}
 module.exports = {
     getMyPrensent,
     add,
     update,
     deleteById,
     getById,
-    bulkDelete
+    bulkDelete,
+    validatePublicForm
 }

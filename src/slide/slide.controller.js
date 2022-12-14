@@ -4,6 +4,7 @@ const Option = require("./option/option.model");
 const Presentation = require("../presentation/presentation.model");
 const { User } = require("../user/user.model");
 const { Types } = require("mongoose");
+const UserOption = require("./option/optionUser.model");
 
 const getByPresent = async (req, res) => {
     const user = req.user;
@@ -30,6 +31,59 @@ const getByPresent = async (req, res) => {
         return res.status(400).send({message: "Error in database conection"})
     }
 };
+const getById = async (req, res) => {
+    const user = req.user;
+    const {id} = req.params;
+    if (!user) {
+        return res
+        .status(400)
+        .send(
+            "User not found"
+        );
+    }
+    try {
+        let slides = await Slide.find({_id: id}).lean();
+        if(!slides||slides.length==0)
+            return res.status(400).send("Slide not found");
+        const options=await Option.find({slide_id:id}).sort({ index: 1 }).lean();
+        slides.options=options;
+        return res.status(200).send({ data: slides });
+    }
+    catch(err){
+        console.error(err);
+        return res.status(400).send({message: "Error in database conection"})
+    }
+};
+
+const createSlide = async (req, res) => {
+    const user = req.user;
+    const {question, presentation_id, index, options}= req.body;
+    const presentation = await Presentation.findOne({_id: presentation_id});
+    if (!presentation) 
+        return res.status(400).send("Presentation not found");
+    if (String(presentation.created_by)!==String(user._id)) 
+        return res.status(400).send("You cannot access this presentation");
+    try {
+        const exits = await Slide.find({presentation_id: presentation_id, index: index});
+        console.log(exits)
+        if (exits&&exits.length>0) 
+            return res.status(400).send("The index has been duplicated");
+        const slideId = new Types.ObjectId();
+        let newSlides={
+            _id: new Types.ObjectId(),
+            question: question, 
+            presentation_id: presentation_id,
+            index: index
+        };
+        const slide = await Slide.create(newSlides);          
+        await addOptionsBySlide(slideId, options);        
+        return res.status(200).send({ data: slide, message:  `Add successfully a slide`   });
+    }
+    catch(err){
+        console.error(err)
+        return res.status(400).send({message: "Error in database conection"})
+    }
+};
 const updateMutiSlide = async (req, res) => {
     const user = req.user;
     const {slides}= req.body;
@@ -45,6 +99,15 @@ const updateMutiSlide = async (req, res) => {
             prevSlide.map(async(p)=>{
                 await Slide.deleteOne({ _id: p._id });  
             })
+        }
+        const uniqueSlide=[];
+        for(i=0;i<slides.length;i++)
+        {
+            
+            if(!uniqueSlide.find(x => x.index === slides[i].index))
+                {
+                    uniqueSlide.push(slides[i]);
+                }
         }
         let newSlides=[];
         slides.map(async(s)=>{
@@ -71,8 +134,9 @@ const deleteById = async (req, res) => {
     if (!slide) 
         return res.status(400).send("Slide not found");
     try {
+        await Slide.deleteOne({ _id: id })
+        await UserOption.deleteMany({ slide_id: id });
 
-        await Presentation.deleteOne({ _id: id });
         return res.status(200).send({ data: slide, message:  `Delete successfully slide id ${id}`  });
     }
     catch(err){
@@ -97,6 +161,8 @@ module.exports = {
     updateMutiSlide,
     getByPresent,
     deleteById,
+    createSlide,
+    getById,
     test1,
     test2
 }
