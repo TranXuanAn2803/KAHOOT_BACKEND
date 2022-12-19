@@ -1,37 +1,37 @@
 // npm i && npm start
 
-const dotenv = require("dotenv");
-const express = require("express");
-const cookieParser = require("cookie-parser");
-const bodyParser = require("body-parser");
+const dotenv = require('dotenv');
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 const app = express();
-const cors = require("cors");
-const config = require("../config/config").getConfig();
-const authRouter = require("./auth/auth.route");
-const userRouter = require("./user/user.route");
-const groupRouter = require("./group/group.route");
-const presentationRouter = require("./presentation/presentation.route");
-const slideRouter = require("./slide/slide.route");
-const { socketSetup } = require("./socket-server");
+const cors = require('cors');
+const config = require('../config/config').getConfig();
+const authRouter = require('./auth/auth.route');
+const userRouter = require('./user/user.route');
+const groupRouter = require('./group/group.route');
+const presentationRouter = require('./presentation/presentation.route');
+const slideRouter = require('./slide/slide.route');
+const { socketSetup } = require('./socket-server');
 
-const session = require("express-session");
-const logger = require("morgan");
+const session = require('express-session');
+const logger = require('morgan');
 
-const http = require("http");
+const http = require('http');
 const httpServer = http.createServer(app);
 
 //config cors
 const corsOptions = {
-  origin: "*",
+  origin: '*',
 };
 
 //intialize port
 const PORT = config.PORT;
 
 //config dotenv
-dotenv.config({ path: "../.env" });
+dotenv.config({ path: '../.env' });
 //config db
-require("../config/database");
+require('../config/database');
 
 // app use library
 app.use(cors(corsOptions));
@@ -41,27 +41,27 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(
   session({
-    secret: "secret",
+    secret: 'secret',
     cookie: { maxAge: 60000000 },
     resave: false,
     saveUninitialized: true,
     expires: { maxAge: 60000000 },
   })
 );
-app.use(logger("common"));
+app.use(logger('common'));
 
-app.get("/", (req, res) => {
-  res.send("This is service of our project . Today is " + new Date());
+app.get('/', (req, res) => {
+  res.send('This is service of our project . Today is ' + new Date());
 });
 
-app.use("/auth", authRouter);
-app.use("/users", userRouter);
-app.use("/group", groupRouter);
-app.use("/presentation", presentationRouter);
-app.use("/slide", slideRouter);
+app.use('/auth', authRouter);
+app.use('/users', userRouter);
+app.use('/group', groupRouter);
+app.use('/presentation', presentationRouter);
+app.use('/slide', slideRouter);
 
-app.use("/", (req, res) => {
-  res.status(404).send({ url: req.originalUrl + " not found" });
+app.use('/', (req, res) => {
+  res.status(404).send({ url: req.originalUrl + ' not found' });
 });
 
 // app
@@ -79,11 +79,11 @@ app.use("/", (req, res) => {
 socketSetup(httpServer);
 httpServer
   .listen(PORT)
-  .on("error", (err) => {
-    console.log("✘ Application failed to start");
-    console.error("✘", err.message);
+  .on('error', (err) => {
+    console.log('✘ Application failed to start');
+    console.error('✘', err.message);
     process.exit(0);
   })
-  .on("listening", () => {
-    console.log(`Server start listening port: https://localhost:${PORT}`);
+  .on('listening', () => {
+    console.log(`Server start listening port: http://localhost:${PORT}`);
   });
