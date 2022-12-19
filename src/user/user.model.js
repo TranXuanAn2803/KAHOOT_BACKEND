@@ -1,9 +1,9 @@
-const mongoose = require("mongoose");
-const { Schema } = require("mongoose");
-const uniqueValidator = require("mongoose-unique-validator");
-const bcrypt = require("bcrypt");
+const mongoose = require('mongoose');
+const { Schema } = require('mongoose');
+const uniqueValidator = require('mongoose-unique-validator');
+const bcrypt = require('bcrypt');
 const User = mongoose.model(
-  "users",
+  'users',
   new Schema(
     {
       id: {
@@ -48,7 +48,7 @@ const User = mongoose.model(
 
 const GetUserByUserName = async function (RequestData) {
   try {
-    if (!Reflect.has(RequestData, "Username")) {
+    if (!Reflect.has(RequestData, 'Username')) {
       throw new Error(
         `GetUserByUserName failed. No Username in RequestData[${RequestData}]`
       );
@@ -71,16 +71,16 @@ const GetUserByUserName = async function (RequestData) {
 
 const UpdateUserById = async (RequestData) => {
   try {
-    var id = RequestData["Id"];
+    var id = RequestData['Id'];
     var updateObject = {};
-    if (Reflect.has(RequestData, "Username")) {
-      updateObject["username"] = RequestData["Username"];
+    if (Reflect.has(RequestData, 'Username')) {
+      updateObject['username'] = RequestData['Username'];
     }
-    if (Reflect.has(RequestData, "Name")) {
-      updateObject["name"] = RequestData["Name"];
+    if (Reflect.has(RequestData, 'Name')) {
+      updateObject['name'] = RequestData['Name'];
     }
-    if (Reflect.has(RequestData, "Email")) {
-      updateObject["email"] = RequestData["Email"];
+    if (Reflect.has(RequestData, 'Email')) {
+      updateObject['email'] = RequestData['Email'];
     }
     if (updateObject == {}) {
       throw new Error(

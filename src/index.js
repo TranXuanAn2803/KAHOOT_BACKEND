@@ -13,12 +13,13 @@ const groupRouter = require('./group/group.route');
 const presentationRouter = require('./presentation/presentation.route');
 const slideRouter = require('./slide/slide.route');
 const { socketSetup } = require('./socket-server');
-
+const passport = require('passport');
 const session = require('express-session');
 const logger = require('morgan');
-
+const { User } = require('./user/user.model');
 const http = require('http');
 const httpServer = http.createServer(app);
+const LocalStrategy = require('passport-local').Strategy;
 
 //config cors
 const corsOptions = {
@@ -39,6 +40,8 @@ app.use(cookieParser());
 // only send 1 bracket
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+// passport.use(User.createStrategy());
 app.use(
   session({
     secret: 'secret',
@@ -48,6 +51,22 @@ app.use(
     expires: { maxAge: 60000000 },
   })
 );
+app.use(passport.initialize());
+app.use(passport.session());
+// Only necessary when using sessions.
+// This tells Passport how to turn the user ID we serialize in the session cookie
+// back into the actual User record from our Mongo database.
+// Here, we simply find the user with the matching ID and return that.
+// This will cause the User record to be available on each authenticated request via the req.user property.
+passport.deserializeUser(function (userId, done) {
+  db.User.findById(userId)
+    .then(function (user) {
+      done(null, user);
+    })
+    .catch(function (err) {
+      done(err);
+    });
+});
 app.use(logger('common'));
 
 app.get('/', (req, res) => {
