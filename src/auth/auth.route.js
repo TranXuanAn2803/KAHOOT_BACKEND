@@ -8,21 +8,25 @@ const bcrypt = require('bcrypt');
 const jwtVariable = require('../../variables/jwt');
 const authMethod = require('./auth.method');
 const randToken = require('rand-token');
+passport.serializeUser(function (user, done) {
+  done(null, user);
+});
 
+passport.deserializeUser(function (user, done) {
+  done(null, user);
+});
 passport.use(
   new LocalStrategy(function verify(username, password, done) {
-    console.log('userpass ', username, password, done);
     User.findOne({
       $or: [{ username: username }, { email: username }],
     })
       .then((user) => {
-        console.log('userfind ', user);
         if (!user || user == null) {
-          return res.status(401).send('Account not found');
+          return done(null, { status: 401, data: 'Account not found' });
         }
         const isPasswordValid = bcrypt.compareSync(password, user.password);
         if (!isPasswordValid) {
-          return res.status(401).send('Password is not valid');
+          return done(null, { status: 401, data: 'Password is not valid' });
         }
         const accessTokenLife =
           process.env.ACCESS_TOKEN_LIFE || jwtVariable.accessTokenLife;
@@ -57,20 +61,26 @@ passport.use(
             //   username: user.username,
             // })
             return done(null, {
-              msg: 'Login successful',
-              accessToken,
-              refreshToken,
-              username: user.username,
+              status: 200,
+              data: {
+                msg: 'Login successful',
+                accessToken,
+                refreshToken,
+                username: user.username,
+              },
             });
           });
       })
       .catch((err) => {
         console.log('err ', err);
-        return res.json({
-          msg: 'Login Fail. Has Exception: ' + error.message,
-          username: null,
-          accessToken: null,
-          refreshToken: null,
+        return done(null, {
+          status: 200,
+          data: {
+            msg: 'Login Fail. Has Exception: ' + error.message,
+            username: null,
+            accessToken: null,
+            refreshToken: null,
+          },
         });
       });
   })
@@ -78,15 +88,13 @@ passport.use(
 
 // declare route
 router.post('/register', authController.register);
-router.post(
-  '/login',
-  passport.authenticate('local', function (req, res) {
-    // res.send({});
-    console.log('req res authenticate', req, res);
-    return res;
-  })
-  //   console.log('req res outside ', req, res);
-);
+router.post('/login', function (req, res) {
+  passport.authenticate('local', function (err, responsePwd, info) {
+    console.log('responsePwd ', responsePwd);
+    const { status, data } = responsePwd;
+    return res.status(status).json(data);
+  })(req, res);
+});
 router.post('/refresh', authController.refreshToken);
 router.post('/google', authController.googleLogin);
 router.get('/confirm/:confirmationCode', authController.verifyEmail);
