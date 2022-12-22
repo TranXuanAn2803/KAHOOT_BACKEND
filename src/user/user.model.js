@@ -40,6 +40,9 @@ const User = mongoose.model(
       confirmationCode: {
         type: String,
       },
+      resetPasswordCode: {
+        type: String,
+      },
     },
     { timestamps: true }
   )

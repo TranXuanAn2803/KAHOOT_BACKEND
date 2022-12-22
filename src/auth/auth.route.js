@@ -95,7 +95,13 @@ router.post('/login', function (req, res) {
     return res.status(status).json(data);
   })(req, res);
 });
+router.post('/change-password', authController.changePassword);
 router.post('/refresh', authController.refreshToken);
 router.post('/google', authController.googleLogin);
+router.post('/user/change-new-password', authController.changeNewPassword);
 router.get('/confirm/:confirmationCode', authController.verifyEmail);
+router.get(
+  '/user/:resetPasswordCode',
+  authController.findUserByResetPasswordCode
+);
 module.exports = router;

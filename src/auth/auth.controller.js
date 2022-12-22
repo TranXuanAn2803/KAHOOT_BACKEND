@@ -1,22 +1,26 @@
 //for generate radnom token
-const randToken = require("rand-token");
+const randToken = require('rand-token');
 // hash pwd
-const bcrypt = require("bcrypt");
-const { User } = require("../user/user.model");
-const { v4: uuidv4 } = require("uuid");
+const bcrypt = require('bcrypt');
+const { User } = require('../user/user.model');
+const { v4: uuidv4 } = require('uuid');
 //variables
-const jwtVariable = require("../../variables/jwt");
-const { SALT_ROUNDS } = require("../../variables/auth");
-const { OAuth2Client } = require("google-auth-library");
+const jwtVariable = require('../../variables/jwt');
+const { SALT_ROUNDS } = require('../../variables/auth');
+const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.CLIENT_ID);
-const authMethod = require("./auth.method");
-const { sendConfirmationEmail } = require("../../config/nodemailer");
-const { confirmationCode } = require("../../utils/confirmationCode");
+const authMethod = require('./auth.method');
+const {
+  sendConfirmationEmail,
+  sendChangePasswordEmail,
+} = require('../../config/nodemailer');
+const { confirmationCode } = require('../../utils/confirmationCode');
+
 //register account
 exports.register = async (req, res) => {
   try {
     if (!req.body.username && !req.body.password && !req.body.email) {
-      return res.status(400).send("Not enough information");
+      return res.status(400).send('Not enough information');
     }
     // console.log("req body ", req.body);
     const username = req.body.username.toLowerCase();
@@ -26,7 +30,7 @@ exports.register = async (req, res) => {
     });
     // console.log("user", user);
     if (user) {
-      res.status(409).send("Username or email is already in use");
+      res.status(409).send('Username or email is already in use');
     } else {
       // console.log("Start create account");
       const code = confirmationCode();
@@ -45,7 +49,7 @@ exports.register = async (req, res) => {
         res
           .status(400)
           .send(
-            "There was an error in creating an account. Please try again after few minutes"
+            'There was an error in creating an account. Please try again after few minutes'
           );
       }
 
@@ -55,7 +59,7 @@ exports.register = async (req, res) => {
       });
     }
   } catch (err) {
-    console.log("err ", err);
+    console.log('err ', err);
   }
 };
 
@@ -70,11 +74,11 @@ exports.login = async (req, res) => {
     });
     // console.log("user login ", user);
     if (!user || user == null) {
-      return res.status(401).send("Account not found");
+      return res.status(401).send('Account not found');
     }
     const isPasswordValid = bcrypt.compareSync(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).send("Password is not valid");
+      return res.status(401).send('Password is not valid');
     }
     const accessTokenLife =
       process.env.ACCESS_TOKEN_LIFE || jwtVariable.accessTokenLife;
@@ -90,7 +94,7 @@ exports.login = async (req, res) => {
       accessTokenLife
     );
     if (!accessToken) {
-      return res.status(401).send("Login failed");
+      return res.status(401).send('Login failed');
     }
     // create refresh token
     let refreshToken = randToken.generate(jwtVariable.refreshTokenSize);
@@ -105,21 +109,49 @@ exports.login = async (req, res) => {
       refreshToken = user.refreshToken;
     }
     return res.json({
-      msg: "Login successful",
+      msg: 'Login successful',
       accessToken,
       refreshToken,
       username: user.username,
     });
   } catch (error) {
     return res.json({
-      msg: "Login Fail. Has Exception: " + error.message,
+      msg: 'Login Fail. Has Exception: ' + error.message,
       username: null,
       accessToken: null,
       refreshToken: null,
     });
   }
 };
-
+exports.changePassword = async (req, res) => {
+  try {
+    console.log('req body', req.body);
+    const email = req.body.email;
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      res.status(401).send('Email not found');
+    } else {
+      const code = confirmationCode();
+      await User.updateOne({ email: email }, { resetPasswordCode: code });
+      sendChangePasswordEmail(user, code);
+      res.status(200).send('Please check your email');
+    }
+  } catch (err) {
+    console.log('error while changing passowrd ', err);
+  }
+};
+exports.findUserByResetPasswordCode = async (req, res) => {
+  const resetPasswordCode = req.params.resetPasswordCode;
+  User.findOne({ resetPasswordCode: resetPasswordCode }).then((data) => {
+    console.log('data ', data);
+    if (!data) {
+      res.status(404).send('User not found');
+    } else {
+      res.status(200).send(data);
+    }
+  });
+};
+exports.resetPassword = async (req, res) => {};
 exports.refreshToken = async (req, res) => {
   const accessTokenFromHeader = req.headers.x_authorization;
   if (!accessTokenFromHeader) {
@@ -143,17 +175,17 @@ exports.refreshToken = async (req, res) => {
     accessTokenSecret
   );
   if (!decoded) {
-    return res.status(400).send("Access token is not valid");
+    return res.status(400).send('Access token is not valid');
   }
 
   const username = decoded.payload.username;
 
   const user = await userModel.getUser(username);
   if (!user) {
-    return res.status(401).send("User does not exist");
+    return res.status(401).send('User does not exist');
   }
   if (refreshTokenFromBody !== user.refreshToken) {
-    return res.status(400).send("Refresh token does not exist");
+    return res.status(400).send('Refresh token does not exist');
   }
 
   const dataForAccessToken = {
@@ -167,7 +199,7 @@ exports.refreshToken = async (req, res) => {
     accessTokenLife
   );
   if (!accessToken) {
-    return res.status(400).send("Fail to create access token");
+    return res.status(400).send('Fail to create access token');
   }
   return res.json({
     accessToken,
@@ -194,7 +226,7 @@ exports.googleLogin = async (req, res) => {
         id: uuidv4(),
         username: email,
         email: email,
-        password: "",
+        password: '',
         is_activate: false,
         confirmationCode: code,
       };
@@ -203,7 +235,7 @@ exports.googleLogin = async (req, res) => {
         res
           .status(400)
           .send(
-            "There was an error in creating an account. Please try again after few minutes"
+            'There was an error in creating an account. Please try again after few minutes'
           );
       }
       sendConfirmationEmail(createUser.username, createUser.email, code);
@@ -226,7 +258,7 @@ exports.googleLogin = async (req, res) => {
       accessTokenLife
     );
     if (!accessToken) {
-      return res.status(401).send("Login failed");
+      return res.status(401).send('Login failed');
     }
     // create refresh token
     let refreshToken = randToken.generate(jwtVariable.refreshTokenSize);
@@ -241,22 +273,19 @@ exports.googleLogin = async (req, res) => {
       refreshToken = user.refreshToken;
     }
     return res.json({
-      msg: "Login successful",
+      msg: 'Login successful',
       accessToken,
       refreshToken,
       username: user.username,
     });
   } catch (err) {
-    console.log("err ", err);
-    return res.status(401).send("Login failed");
+    console.log('err ', err);
+    return res.status(401).send('Login failed');
   }
 };
 exports.verifyEmail = async (req, res) => {
   User.findOne({ confirmationCode: req.params.confirmationCode })
     .then((user) => {
-      if (!user) {
-        return res.status(404).send({ message: "User Not found." });
-      }
       user.is_activated = true;
       user.save((err) => {
         if (err) {
@@ -264,7 +293,29 @@ exports.verifyEmail = async (req, res) => {
           return;
         }
       });
-      res.status(200).send({ message: "Verify email successful!!!" });
+      res.status(200).send({ message: 'Verify email successful!!!' });
     })
-    .catch((e) => console.log("error", e));
+    .catch((e) => console.log('error', e));
+};
+exports.changeNewPassword = async (req, res) => {
+  const resetPasswordCode = req.body.resetPasswordCode;
+  const password = req.body.password;
+  console.log('req body ', resetPasswordCode, password);
+
+  User.findOne({ resetPasswordCode: resetPasswordCode })
+    .then((user) => {
+      const hashPassword = bcrypt.hashSync(password, SALT_ROUNDS);
+      user.password = hashPassword;
+      user.save((err) => {
+        if (err) {
+          res.status(500).send({ message: err });
+          return;
+        }
+      });
+      res.status(200).send('Change password successfully');
+    })
+    .catch((err) => {
+      console.log('error', err);
+      return res.status(404).send('Update password failed');
+    });
 };
