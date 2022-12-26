@@ -28,11 +28,9 @@ exports.register = async (req, res) => {
     const user = await User.findOne({
       $or: [{ username: username }, { email: email }],
     });
-    // console.log("user", user);
     if (user) {
       res.status(409).send('Username or email is already in use');
     } else {
-      // console.log("Start create account");
       const code = confirmationCode();
       const hashPassword = bcrypt.hashSync(req.body.password, SALT_ROUNDS);
       const newUser = {
