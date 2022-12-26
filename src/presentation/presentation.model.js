@@ -16,6 +16,11 @@ const Presentation = mongoose.model(
         type: String,
         required: true,
       },
+      current_session:{
+        type: String,
+        required: false,
+      },
+
       collaborators: [
         {
           type: Schema.Types.ObjectId,
