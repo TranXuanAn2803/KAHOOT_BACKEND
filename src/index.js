@@ -21,6 +21,9 @@ const http = require('http');
 const httpServer = http.createServer(app);
 const LocalStrategy = require('passport-local').Strategy;
 
+//#region import router
+const sessionRouter = require("./session/session.route");
+// #endregion
 //config cors
 const corsOptions = {
   origin: '*',
@@ -78,6 +81,7 @@ app.use('/users', userRouter);
 app.use('/group', groupRouter);
 app.use('/presentation', presentationRouter);
 app.use('/slide', slideRouter);
+app.use('/session', sessionRouter);
 
 app.use('/', (req, res) => {
   res.status(404).send({ url: req.originalUrl + ' not found' });
