@@ -1,26 +1,35 @@
 const mongoose = require("mongoose");
 const { Schema } = require("mongoose");
 const Answer = mongoose.model(
-    "answer",
-    new Schema(
+  "answer",
+  new Schema(
+    {
+      sessionId: {
+        type: Schema.Types.ObjectId,
+        ref: "sessions",
+      },
+      presentationId: {
+        type: Schema.Types.Number,
+      },
+      participantId: {
+        type: Schema.Types.String,
+        ref: "users",
+      },
+      result: [
         {
-        session_id: {
-            type: Schema.Types.ObjectId,
-            ref: "session",
-        },
-        slide_id: {
-            type: Schema.Types.Number,
-        },
-        respondent_id: {
-            type: Schema.Types.String,
-            ref: "users",
-        },
-        option_id: {
+          slideIndex: { type: Number },
+          optionId: {
             type: Schema.Types.ObjectId,
             ref: "options",
-        }
+          },
+          answered: {
+            type: Boolean,
+            default: false,
+          },
         },
-        { timestamps: true }
-    )
+      ],
+    },
+    { timestamps: true }
+  )
 );
-module.exports = Session;
+module.exports = {Answer};
