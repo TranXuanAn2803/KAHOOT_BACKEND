@@ -27,7 +27,9 @@ const isAuth = async (req, res, next) => {
   if (user?.password) {
     delete user.password;
   }
+  console.log("user ", user);
   req.user = user;
+  return next();
 };
 const isUser = async (req, res, next) => {
   // get access token from header
@@ -55,4 +57,4 @@ const isUser = async (req, res, next) => {
 
   return next();
 };
-module.exports = {isAuth,isUser};
+module.exports = { isAuth, isUser };
