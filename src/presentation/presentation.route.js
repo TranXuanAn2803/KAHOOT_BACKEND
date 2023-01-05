@@ -15,6 +15,7 @@ router.get(
   presentationController.getAllCollaborators
 );
 router.get("/share/:id", isAuth, presentationController.getSharingPresent);
+router.delete("/share/:id", isAuth, presentationController.removeSharingPresent);
 
 router.get('/:id', isAuth, presentationController.getById);
 router.post('/addCollaborator', isAuth, presentationController.addCollaborator);
@@ -26,7 +27,6 @@ router.put("/toggleStatus/:id", isAuth, presentationController.toggleStatus);
 router.put("/presenting/role/:id", isUser, presentationController.getPresentingRole);
 router.put("/presenting/slide/:id", isUser,presentationController.getCurrentSlide);
 router.put("/share/:id", isAuth, presentationController.sharePresent);
-router.delete("/share/:id", isAuth, presentationController.removeSharingPresent);
 
 router.put('/:id', isAuth, presentationController.update);
 router.delete('/:id', isAuth, presentationController.deleteById);

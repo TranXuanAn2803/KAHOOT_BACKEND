@@ -598,7 +598,8 @@ const sharePresent=async(req, res)=>{
 }
 const removeSharingPresent=async(req, res)=>{
     const { id } = req.params;
-    const groupPresent = await Presentation.findOne({ _id: id }).lean();
+    const user= req.user;
+    const groupPresent = await GroupPresentation.findOne({ _id: id }).lean();
     if (!groupPresent) return res.status(400).send("Sharing presentation not found");
     try {
         const presentation = await Presentation.findOne({ _id: groupPresent.presentation_id });
@@ -678,6 +679,8 @@ const toggleStatus = async(req, res)=>{
                   break;
                 }
             }
+              break;
+
           }
           case 1:{
             const checkRole= await _checkCollaborRole(id, user._id)
