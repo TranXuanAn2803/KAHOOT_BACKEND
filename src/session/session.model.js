@@ -4,7 +4,7 @@ const Session = mongoose.model(
   "session",
   new Schema(
     {
-      presentation_id: {
+      presentationId: {
         type: Schema.Types.ObjectId,
         ref: "presentations",
       },
@@ -14,39 +14,60 @@ const Session = mongoose.model(
       code: {
         type: Schema.Types.String,
       },
-      group_id: {
+      groupId: {
         type: Schema.Types.ObjectId,
         ref: "groups",
       },
-      host_id: {
+      hostId: {
         type: Schema.Types.ObjectId,
         ref: "users",
       },
+      participantList: [{
+        type: Schema.Types.ObjectId,
+        ref: "users",
+      }],
+      date: {
+        type: Date,
+        required: true,
+        default: Date.now,
+      },
+      isLive: {
+        type: Boolean,
+        default: false,
+      },
+      answerList: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "answers",
+        }
+    ]
     },
     { timestamps: true }
   )
 );
 
-exports.CreateSession = async (RequestData) => {
+const createSession = async (RequestData) => {
   try {
-      
-      var newPresentationSession = {
-          _id: new mongoose.Types.ObjectId(),
-          presentation_id: RequestData.PresentationId,
-          type: RequestData.Type,
-          code: "1243456",
-          group_id: null,
-          host_id: RequestData.HostId,
-        };
-        console.log("RequestData:", RequestData);
-    var presentationSession = await Session.create(newPresentationSession);
-    console.log("new: ", newPresentationSession);
-    if (presentationSession == null) {
-      throw new Error(`Presentation trả về null`);
-    }
-    console.log(presentationSession);
+      const {PresentationId, Type, GroupId, HostId, ParticipantList, IsLive, AnswerList}= RequestData; 
+    var newSession = new Session({
+        presentationId: PresentationId,
+        type: Type,
+        Code: '123456',
+        groupId: GroupId,
+        hostId: HostId,
+        participantList: ParticipantList,
+        date: new Date().toISOString(),
+        answerList: AnswerList,
+        isLive: IsLive,
+    });
+    var presentationSession = newSession.save();
     return presentationSession;
   } catch (err) {
     throw new Error(`CreateSession failed. Error[${err}]`);
   }
+};
+
+module.exports = {
+    Session,
+    createSession
 };
