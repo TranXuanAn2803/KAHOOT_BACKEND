@@ -20,6 +20,11 @@ const Presentation = mongoose.model(
         type: String,
         required: false,
       },
+      current_slide:{
+        type: Number,
+        default: 0,
+      },
+
 
       collaborators: [
         {

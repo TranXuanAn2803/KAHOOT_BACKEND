@@ -176,12 +176,33 @@ const deleteByPresent = async (id) => {
     }
 
 };
+const getSlideMethod =async(presentation_id)=>
+{
+    try {
+        const presentation = await Presentation.findOne({_id: presentation_id}, { name: 1}).lean();
+        if (!presentation)
+            return null;
+        let slides = await Slide.find({presentation_id: id}).sort({ index: 1 }).lean();
+        for(let s of slides){
+            const options=await Option.find({slide_id:s._id}).sort({ index: 1 }).lean();
+            s.options=options;
+        }
+        presentation.slides=slides
+        return presentation;
+    }
+    catch(err){
+        console.error(err)
+        return null;
+    }
 
+
+}
 module.exports = {
     updateMutiSlide,
     getByPresent,
     deleteById,
     createSlide,
     getById,
-    deleteByPresent
+    deleteByPresent,
+    getSlideMethod
 }

@@ -11,7 +11,17 @@ const GroupPresentation = mongoose.model(
         group_id:{
             type: Schema.Types.ObjectId, 
             ref: 'groups' 
-        }
+        },
+        current_session:{
+            type: String,
+            required: false,
+        },
+        current_slide:{
+            type: Number,
+            default: 0,
+        },
+
+
         },
         { timestamps: true }
     )

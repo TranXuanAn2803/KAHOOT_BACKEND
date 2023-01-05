@@ -36,7 +36,8 @@ const addMember = async (req, res) => {
   const { email } = req.body;
   const groupId = req.params.id;
   const checkPermission = await _isOwner(req.user, groupId);
-  if (!checkPermission) {
+  const isPresenting = await _isPresenting(groupId)
+  if (!checkPermission||!isPresenting) {
     return res.status(405).send('You are not allowed to access this');
   }
   const user = await _getUserByEmail(email);
@@ -73,7 +74,9 @@ const toggleRole = async (req, res) => {
   const { newRole } = req.body;
   const validate = _validateRole(newRole);
   const userGroup = await _getUserGroupById(memberId);
-  if (!userGroup) {
+  const isPresenting = await _isPresenting(userGroup.group_id)
+
+  if (!userGroup||!isPresenting) {
     return res
       .status(400)
       .send(
@@ -118,7 +121,8 @@ const deleteMember = async (req, res) => {
   const memberId = req.params.id;
   const userGroup = await UserGroup.find({ id: memberId, is_deleted: false });
   const checkPermission = await _isOwner(req.user, groupId);
-  if (!checkPermission) {
+  const isPresenting = await _isPresenting(userGroup.group_id)
+  if (!checkPermission||!isPresenting) {
     return res.status(405).send('You are not allowed to access this');
   }
 
@@ -223,6 +227,11 @@ const _isCoOwner = async (user, groupId) => {
 const exitGroup = async (req, res) => {
   const groupId = req.params.id;
   const user = req.user;
+  const isPresenting = await _isPresenting(groupId)
+  if (!isPresenting) {
+    return res.status(405).send('You are not allowed to access this');
+  }
+
   const userGroup = await UserGroup.findOne({
     group_id: groupId,
     user_id: user.id,
@@ -254,6 +263,10 @@ const joinGroup = async (req, res) => {
   const user = req.user;
   const validate = await _validateGroup(groupId);
   console.log(validate);
+  const isPresenting = await _isPresenting(groupId)
+  if (!isPresenting) {
+    return res.status(405).send('You are not allowed to access this');
+  }
 
   if (!validate || !user) {
     return res
@@ -356,6 +369,33 @@ const getAGroup = async (req, res) => {
   const group = await Group.findOne({ id: id });
   return res.send({ group });
 };
+const _isPresenting = async(id)=>{
+  const group = await Group.find({ id: id }).lean();
+  const groupPresent = await GroupPresentation.find({ group_id: group._id }).lean();
+  for (let gp of groupPresent)
+  {
+    const present = await Presentation.find({ _id: gp.presentation_id },{status: 1}).lean();
+    if(present.status!=0) return false;
+  }
+  return true;
+}
+const deleteGroup = async (req, res) => {
+  const groupId = req.params.id;
+  const group = await Group.find({ id: groupId, is_deleted: false });
+  const checkPermission = await _isOwner(req.user, groupId);
+  const isPresenting = await _isPresenting(userGroup.group_id)
+  if (!group||!isPresenting||!checkPermission) {
+    return res.status(405).send('You are not allowed to access this');
+  }
+
+  await Group.updateOne(
+    { id: groupId },
+    { is_deleted: true }
+  );
+
+  return res.send({ group });
+};
+
 module.exports = {
   createGroup,
   addMember,

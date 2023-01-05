@@ -71,7 +71,7 @@ const getTotalAnswerBySlide =async(slideId)=>{
         for (let option of options){
             const [total, user] = await Promise.all([
                 UserOption.count({option_id: option.id}),
-                UserOption.find({option_id: option.id}).lean()
+                UserOption.find({option_id: option.id}, {username: 1}).lean()
             ]);
             let answer={user: user, total:total, content: option.content, id:option.id}
             userAnswer.push(answer)

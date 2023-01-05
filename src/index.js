@@ -11,6 +11,9 @@ const authRouter = require('./auth/auth.route');
 const userRouter = require('./user/user.route');
 const groupRouter = require('./group/group.route');
 const presentationRouter = require('./presentation/presentation.route');
+const chatRouter = require('./chat/chat.route');
+const questionRouter = require('./question/question.route');
+
 const slideRouter = require('./slide/slide.route');
 const { socketSetup } = require('./socket-server');
 const passport = require('passport');
@@ -78,6 +81,8 @@ app.use('/users', userRouter);
 app.use('/group', groupRouter);
 app.use('/presentation', presentationRouter);
 app.use('/slide', slideRouter);
+app.use('/chat', chatRouter);
+app.use('/question', questionRouter);
 
 app.use('/', (req, res) => {
   res.status(404).send({ url: req.originalUrl + ' not found' });
@@ -95,7 +100,6 @@ app.use('/', (req, res) => {
 //   .on("listening", () => {
 //     console.log(`Server start listening port: http://localhost:${PORT}`);
 //   });
-socketSetup(httpServer);
 httpServer
   .listen(PORT)
   .on('error', (err) => {
@@ -105,4 +109,6 @@ httpServer
   })
   .on('listening', () => {
     console.log(`Server start listening port: http://localhost:${PORT}`);
+    socketSetup(httpServer);
+
   });

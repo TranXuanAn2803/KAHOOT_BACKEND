@@ -1,8 +1,11 @@
 const Presentation = require("./presentation.model");
 const {deleteByPresent} = require("../slide/slide.controller");
+const Slide = require("../slide/slide.model");
+
 const GroupPresentation=require("./group/groupPresentation.model")
 const UserGroup = require("../group/user_group.model");
 const Group = require("../group/group.model");
+const { v4: uuidv4 } = require('uuid');
 
 const { User } = require('../user/user.model');
 const { Types } = require('mongoose');
@@ -117,7 +120,8 @@ const update = async (req, res) => {
     const user = req.user;
     const { id } = req.params;
     const presentation = await Presentation.findOne({ _id: id });
-    if (!presentation) return res.status(400).send("Presentation not found");
+    const checkRole= await _checkCollaborRole(id, user._id)
+    if (!checkRole) return res.status(400).send("Presentation not found");
     if (String(presentation.created_by) !== String(user._id)) {
         return res.status(400).send("You cannot access this presentation");
     }
@@ -236,14 +240,219 @@ const bulkDelete = async (req, res) => {
     return res.status(400).send({ message: 'Error in database conection' });
   }
 };
-const validatePublicForm = async (id, pin) => {
+const validatePublicForm = async (id) => {
   const presentation = await Presentation.findOne({
     _id: id,
-    status: { $ne: 0 },
+    status: { $gt: 1 },
   });
 
   return presentation;
 };
+const getCurrentSession = async (id, groupId) => {
+
+  try {
+    const presentation = await Presentation.findOne({
+      _id: id,
+    });
+    if(!presentation||!presentation.status) return null;
+
+    switch(presentation.status){
+        case 2:
+        {
+          const groupPresent = await GroupPresentation.findOne({ group_id: groupId, presentation_id: id }).lean();
+          await GroupPresentation.findOne({ group_id: groupId, presentation_id: id })
+          return groupPresent.current_session;
+
+        }
+        case 3:
+        {
+          return presentation.current_session;
+        }
+      }
+      return null;
+
+    }
+    catch(err){
+        console.error(err)
+        return null;
+    }
+
+
+};
+const checkJoinPresentingPermisstion = async (id, groupId, user) => {
+
+  try {
+    const presentation = await Presentation.findOne({
+      _id: id,
+    });
+    if(!presentation||!presentation.status) return null;
+
+    switch(presentation.status){
+        case 2:
+        {
+          const userGroup = await UserGroup.find({
+            group_id: groupId,
+            user_id: user.id,
+            is_deleted: false,
+          });
+          if (!userGroup || userGroup.length == 0) {
+            return false;
+          }
+          return true;
+        }
+        case 3:
+        {
+          return true;
+        }
+      }
+      return false;
+
+    }
+    catch(err){
+        console.error(err)
+        return false;
+    }
+
+
+};
+
+const updateCurrentSlide = async (id, sessionId) => {
+  try {
+    const presentation = await Presentation.findOne({
+      _id: id,
+    });
+    if(!presentation||!presentation.status)  return false;
+    switch(presentation.status){
+        case 2:
+        {
+          const groupPresent = await GroupPresentation.findOne({ presentation_id: id, current_session: sessionId }).lean();
+          const nextSlide = await Slide.find({presentation_id: id, index: { $gt: groupPresent.current_slide}}).sort({ index: 1 }).lean();
+          if(!nextSlide||!nextSlide.length)  return false;
+          await GroupPresentation.updateOne({ group_id: groupId, presentation_id: id },{current_slide: nextSlide[0].index})
+          return true;
+        }
+        case 3:
+        {
+          const nextSlide = await Slide.find({presentation_id: id, index: { $gt: presentation.current_slide}}).sort({ index: 1 }).lean();
+          if(!nextSlide||!nextSlide.length)  return false;
+          await Presentation.updateOne({ _id: id },{current_slide: nextSlide[0].index})
+          return true;
+
+        }
+      }
+    return false;
+
+    }
+  catch(err){
+        console.error(err)
+        return false;
+  }
+};
+const getCurrentSlide = async (req, res) => {
+  const id = req.params.id
+  const {sessionId} = req.body;
+
+  try {
+    const presentation = await Presentation.findOne({
+      _id: id,
+    });
+    if(!presentation||!presentation.status) res.status(400).send("Presentation not found");
+    switch(presentation.status){
+        case 2:
+        {
+          const groupPresent = await GroupPresentation.findOne({ presentation_id: id, current_session: sessionId }).lean();
+          return res.status(200).send({ data: {current_slide: groupPresent.current_slide}   });
+        }
+        case 3:
+        {
+          return res.status(200).send({ data: {current_slide: presentation.current_slide}   });
+
+        }
+      }
+      return res.status(400).send("Presentation is not available");
+
+    }
+  catch(err){
+        console.error(err)
+        return res.status(400).send({ message: "Error in database conection" });
+  }
+};
+const getPresentingRole = async (req, res) => {
+  const id = req.params.id
+  const {sessionId} = req.body;
+  let user = req.user;
+  try {
+    if(!user) res.status(200).send({ data: {role: 'user'}   });
+
+    const presentation = await Presentation.findOne({
+      _id: id,
+    });
+    if(!presentation||!presentation.status) res.status(400).send("Presentation not found");
+    switch(presentation.status){
+        case 2:
+        {
+          const groupPresent = await GroupPresentation.findOne({ presentation_id: id, current_session: sessionId }).lean();
+          const checkPermission= (await _isCoOwner(user, groupPresent.group_id))||(await _isOwner(user, groupPresent.group_id)) 
+          if(!groupPresent||!checkPermission) {
+            return res.status(200).send({ data: {role: 'user'}   });
+          }
+          return res.status(200).send({ data: {role: 'admin'}   });
+        }
+        case 3:
+        {
+          if (String(presentation.created_by) !== String(user._id))
+          {
+            return res.status(200).send({ data: {role: 'user'}   });
+          }
+          return res.status(200).send({ data: {role: 'admin'}   });
+        }
+      }
+      res.status(200).send({ data: {role: 'user'}   });
+
+    }
+  catch(err){
+        console.error(err)
+        return res.status(400).send({ message: "Error in database conection" });
+  }
+};
+
+const checkPermissionPresenting = async (id, sessionId, user) => {
+  try {
+    const presentation = await Presentation.findOne({
+      _id: id,
+    });
+    if(!presentation||!presentation.status||!user||!user._id)  return false;
+    switch(presentation.status){
+        case 2:
+        {
+          const groupPresent = await GroupPresentation.findOne({ presentation_id: id, current_session: sessionId }).lean();
+          const checkPermission= (await _isCoOwner(user, groupPresent.group_id))||(await _isOwner(user, groupPresent.group_id)) 
+          if(!groupPresent||!checkPermission) {
+            return false;
+          }
+          return true;
+        }
+        case 3:
+        {
+          console.log(user._id)
+          console.log(presentation.created_by)
+
+          if (String(presentation.created_by) !== String(user._id))
+          {
+              return false;
+          }
+          return true;
+        }
+      }
+    return false;
+
+    }
+  catch(err){
+        console.error(err)
+        return false;
+  }
+};
+
 
 
 const addCollabor=async(req, res)=>{
@@ -350,7 +559,6 @@ const getColaborator=async (req, res)=>{
 const _checkCollaborRole=async(id, userId)=>{
     const presentation = await Presentation.findOne({ _id: id });
     if(!presentation||!userId) return false;
-
     if (String(presentation.created_by) === String(userId))   return true;
     // console.log(presentation.collaborators)
     const notExist = presentation.collaborators.filter((c)=>{
@@ -368,18 +576,19 @@ const sharePresent=async(req, res)=>{
     if (!presentation) return res.status(400).send("Presentation not found");
     const group = await Group.findOne({ id: groupId, is_deleted: false });
     if (!group) return res.status(400).send("Group not found");
-    const checkRole= await _checkCollaborRole(id, user._id)
     const isGroupOwner = await _isOwner(user, groupId)
-    if (!checkRole||!isGroupOwner)
+    console.log(isGroupOwner)
+    if (String(presentation.created_by) !== String(user._id)||!isGroupOwner)
     {
         return res.status(400).send("You cannot access this feature");
     }
     try {
-        const groupPresent = await GroupPresentation.find({group_id: groupId,presentation_id: id});
+        const groupPresent = await GroupPresentation.find({group_id: group._id,presentation_id: id});
+        console.log(groupPresent)
         if (groupPresent && groupPresent.length > 0) {
             return res.status(400).send("This presetation already shared");
         }
-        const newShare = {group_id: groupId,presentation_id: id};
+        const newShare = {group_id: group._id,presentation_id: id};
         const member = await GroupPresentation.create(newShare);
         return res.status(200).send({ data: member , message:  `Share this presentation to a group successfully`  });
     } catch (err) {
@@ -394,11 +603,10 @@ const removeSharingPresent=async(req, res)=>{
     try {
         const presentation = await Presentation.findOne({ _id: groupPresent.presentation_id });
         if (!presentation) return res.status(400).send("Presentation not found");
-        const group = await Group.findOne({ id: groupPresent.group_id, is_deleted: false });
+        const group = await Group.findOne({ _id: groupPresent.group_id, is_deleted: false });
         if (!group) return res.status(400).send("Group not found");
-        const checkRole= await _checkCollaborRole(groupPresent.presentation_id, user._id)
-        const isGroupOwner = await _isOwner(user, groupPresent.group_id)
-        if (!checkRole||!isGroupOwner)
+        const isGroupOwner = await _isOwner(user, group.id)
+        if (String(presentation.created_by) !== String(user._id)||!isGroupOwner)
         {
             return res.status(400).send("You cannot access this feature");
         }
@@ -415,10 +623,15 @@ const getSharingPresent=async(req, res)=>{
     const group = await Group.findOne({ id: id, is_deleted: false });
     if (!group) return res.status(400).send("Group not found");
     try {
-        let groupPresent = await Presentation.findOne({ group_id: id }).lean();
-        const present = await Presentation.find({ _id: groupPresent.presentation_id },{name:1, created_by: 1}).populate({path: "created_by",model: User,select: "username email name",}).lean();
-        groupPresent={...groupPresent, present}
-        return res.status(200).send({ data: groupPresent });
+        let groupPresent = await GroupPresentation.find({ group_id: group._id }).lean();
+        let result=[];
+        for (let gp of groupPresent)
+        {
+          const present = await Presentation.find({ _id: gp.presentation_id },{name:1, created_by: 1}).populate({path: "created_by",model: User,select: "username email name",}).lean();
+
+          result.push({...gp, present})
+        }
+        return res.status(200).send({ data: result });
     } catch (err) {
         console.error(err);
         return res.status(400).send({ message: "Error in database conection" });
@@ -430,29 +643,78 @@ const toggleStatus = async(req, res)=>{
     const { id } = req.params;
     const presentation = await Presentation.findOne({ _id: id });
     if (!presentation) return res.status(400).send("Presentation not found");
-    const checkRole= await _checkCollaborRole(id, user._id)
-    if (!checkRole) {
-        return res.status(400).send("You cannot access this presentation");
-    }
-    let { status } = req.body;
+    let { status, groupId } = req.body;
     if(status) status= Math.max(Math.min(status,3),0);
+    const oldStatus = presentation.status
+    const newSessions = uuidv4();
     try {
-        if(status==3)
-        {
-            let { groupId } = req.body;
-            const groupPresent = await GroupPresentation.find({group_id: groupId,presentation_id: id});
-            if (!groupPresent) return res.status(400).send("Sharing presentation not found");
-            const checkGroupPermission= (await _isOwner(user, groupId))||(await _isCoOwner(user, groupId))
-            if(!checkGroupPermission) return res.status(400).send("You must be an owner or co-owner to share this presentation");
+      switch(status){
+          case 0:{
+            switch (oldStatus)
+            {
+                case 1:{
+                  const checkRole= await _checkCollaborRole(id, user._id)
+                  if(!checkRole) {
+                    return res.status(400).send("You cannot access presentation in status"+ oldStatus);
+                  }
+                  break;
+                }
+                case 2:
+                {
+                  const groupPresent = await GroupPresentation.findOne({ group_id: groupId, presentation_id: id }).lean();
+                  const checkPermission= (await _isCoOwner(user, groupId))||(await _isOwner(user, groupId)) 
+                  if(!groupPresent||!checkPermission) {
+                    return res.status(400).send("You cannot access presentation in status"+ oldStatus);
+                  }
+                  break;
+
+                }
+                case 3:
+                {
+                  if (String(presentation.created_by) !== String(user._id))
+                  {
+                      return res.status(400).send("You cannot access this presentation");
+                  }
+                  break;
+                }
+            }
+          }
+          case 1:{
+            const checkRole= await _checkCollaborRole(id, user._id)
+            console.log(oldStatus>0||!checkRole)
+            console.log(oldStatus)
+            if(oldStatus>0||!checkRole) {
+              return res.status(400).send("You cannot access presentation in status"+ oldStatus);
+            }
+            break;
+          }
+          case 2:
+          {
+            const groupPresent = await GroupPresentation.findOne({ group_id: groupId, presentation_id: id }).lean();
+            const checkPermission= (await _isCoOwner(user, groupId))||(await _isOwner(user, groupId)) 
+            await GroupPresentation.updateOne({ group_id: groupId, presentation_id: id },{current_session: newSessions,current_slide: 0})
+            if(oldStatus==1||oldStatus==3||!groupPresent||!checkPermission) {
+              return res.status(400).send("You cannot access presentation in status"+ oldStatus);
+            }
+            break;
+
+          }
+          case 3:
+          {
+            if (oldStatus>0||String(presentation.created_by) !== String(user._id))
+            {
+                return res.status(400).send("You cannot access this presentation");
+            }
+            break;
+
+          }
         }
-        const present = await Presentation.updateOne({ _id: id },{status: status,link_code: code,}
-        );
+        const present = await Presentation.updateOne({ _id: id },{status: status,current_slide: 0,current_session: newSessions});
         return res.status(200).send({ data: present , message:  `Update successfully presentation id ${id}` });
     } catch (err) {
         console.error(err);
         return res.status(400).send({ message: "Error in database conection" });
     }
-
 }
 const _getUserByEmail = async (email) => {
     const user = await User.find({ email: email, is_deleted: false });
@@ -491,5 +753,15 @@ module.exports = {
     getColaborator,
     getAllCollaborators,
     addCollaborator,
-    deleteCollaborator
+    deleteCollaborator,
+    toggleStatus,
+    getCurrentSession,
+    updateCurrentSlide,
+    checkPermissionPresenting,
+    getPresentingRole,
+    getCurrentSlide,
+    checkJoinPresentingPermisstion,
+    sharePresent,
+    removeSharingPresent,
+    getSharingPresent
 };

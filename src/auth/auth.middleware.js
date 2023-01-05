@@ -7,7 +7,7 @@ const { User } = require("../user/user.model");
 //auth method
 const authMethod = require("./auth.method");
 
-exports.isAuth = async (req, res, next) => {
+const isAuth = async (req, res, next) => {
   // get access token from header
   const accessTokenFromHeader = req.headers.x_authorization;
   if (!accessTokenFromHeader) {
@@ -28,6 +28,31 @@ exports.isAuth = async (req, res, next) => {
     delete user.password;
   }
   req.user = user;
+};
+const isUser = async (req, res, next) => {
+  // get access token from header
+  const accessTokenFromHeader = req.headers.x_authorization;
+  if (!accessTokenFromHeader) {
+    req.user = null;
+    return next();
+  }
+  const accessTokenSecret =
+    process.env.ACCESS_TOKEN_SECRET || jwtVariable.accessTokenSecret;
+
+  const verified = await authMethod.verifyToken(
+    accessTokenFromHeader,
+    accessTokenSecret
+  );
+  if (!verified) {
+    req.user = null;
+    return next();
+  }
+  let user = await User.findOne({ email: verified.payload.email });
+  if (user?.password) {
+    delete user.password;
+  }
+  req.user = user;
 
   return next();
 };
+module.exports = {isAuth,isUser};

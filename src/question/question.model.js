@@ -4,14 +4,17 @@ const Question = mongoose.model(
     "question",
     new Schema(
         {
-        group_id:{
-            type: Schema.Types.ObjectId, 
-            ref: 'groups' 
-        },
-        question:
-        {
+        session_id:{
             type: String,
             required: true,
+        },
+        presentation_id:{
+            type: Schema.Types.ObjectId, 
+            ref: 'presentations' 
+        },    
+        question: {
+            type: String,
+            required: false,
         },
         vote:{
             type: Number,
@@ -20,7 +23,11 @@ const Question = mongoose.model(
         is_answered:{
             type: Boolean,
             default: false,
-        }
+        },
+        created_by: {
+            type: String,
+            required: false,
+        },
         },
         { timestamps: true }
     )

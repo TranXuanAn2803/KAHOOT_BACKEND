@@ -18,8 +18,8 @@ const Chat = mongoose.model(
             required: true,
         },
         created_by: {
-            type: Schema.Types.ObjectId,
-            ref: "users",
+            type: String,
+            required: false,
         },
         },
         { timestamps: true }
