@@ -7,15 +7,7 @@ const { Types } = require("mongoose");
 const UserOption = require("./option/optionUser.model");
 
 const getByPresent = async (req, res) => {
-    const user = req.user;
     const {id} = req.params;
-    if (!user) {
-        return res
-        .status(400)
-        .send(
-            "User not found"
-        );
-    }
     try {
         const presentation = await Presentation.findOne({_id: id}, { name: 1}).lean();
         if (!presentation)
