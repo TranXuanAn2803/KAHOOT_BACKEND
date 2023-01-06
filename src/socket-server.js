@@ -40,7 +40,7 @@ const socketSetup = (httpServer) => {
 
         if (!present||!current_session||!checkJoinPresentingPermisstion)            return false;
         else {
-          socket.join(present.current_session);
+          await socket.join(present.current_session);
           return socket.to(id).emit('new-session-for-game', { status: 'sucess', data: {current_session: current_session} });
         }
       } catch (err) {
@@ -271,11 +271,12 @@ const socketSetup = (httpServer) => {
             });
         } else {
           await addUserAnswer(username, options);
+          let total = await getTotalAnswerBySlide(slideId);
           socket
             .to(id)
             .emit('get-answer-from-player', {
               status: 'sucess',
-              data: { username, options },
+              data: { username, options, total },
             });
         }
       } catch (err) {
