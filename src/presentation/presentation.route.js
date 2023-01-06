@@ -26,6 +26,8 @@ router.get("/collabor/:id", isAuth, presentationController.getColaborator);
 router.put("/toggleStatus/:id", isAuth, presentationController.toggleStatus);
 router.put("/presenting/role/:id", isUser, presentationController.getPresentingRole);
 router.put("/presenting/slide/:id", isUser,presentationController.getCurrentSlide);
+router.put("/presenting/session/:id", isUser,presentationController.getCurrentSession);
+
 router.put("/share/:id", isAuth, presentationController.sharePresent);
 
 router.put('/:id', isAuth, presentationController.update);

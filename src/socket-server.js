@@ -31,16 +31,12 @@ const socketSetup = (httpServer) => {
     socket.on('init-game', async ({id, groupId, user}) => {
       try {
         let present = await PresentationControler.validatePublicForm(id);
-        console.log(present);
-        const current_session = await PresentationControler.getCurrentSession(id, groupId)
-        console.log(current_session);
 
         const checkJoinPresentingPermisstion = await PresentationControler.checkJoinPresentingPermisstion(id, groupId, user);
         console.log(checkJoinPresentingPermisstion);
 
-        if (!present||!current_session||!checkJoinPresentingPermisstion)            return false;
+        if (!present||!checkJoinPresentingPermisstion)            return false;
         else {
-          await socket.join(present.current_session);
           return socket.to(id).emit('new-session-for-game', { status: 'sucess', data: {current_session: current_session} });
         }
       } catch (err) {
