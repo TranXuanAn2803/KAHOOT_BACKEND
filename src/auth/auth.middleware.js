@@ -9,21 +9,21 @@ const authMethod = require("./auth.method");
 
 const isAuth = async (req, res, next) => {
   // get access token from header
-  // const accessTokenFromHeader = req.headers.x_authorization;
-  // if (!accessTokenFromHeader) {
-  //   return res.status(401).send("Cannot find access Token");
-  // }
-  // const accessTokenSecret =
-  //   process.env.ACCESS_TOKEN_SECRET || jwtVariable.accessTokenSecret;
+  const accessTokenFromHeader = req.headers.x_authorization;
+  if (!accessTokenFromHeader) {
+    return res.status(401).send("Cannot find access Token");
+  }
+  const accessTokenSecret =
+    process.env.ACCESS_TOKEN_SECRET || jwtVariable.accessTokenSecret;
 
-  // const verified = await authMethod.verifyToken(
-  //   accessTokenFromHeader,
-  //   accessTokenSecret
-  // );
-  // if (!verified) {
-  //   return res.status(401).send("Your access token cannot verify");
-  // }
-  let user = await User.findOne({ email: 'tranxuana2803@gmail.com' });
+  const verified = await authMethod.verifyToken(
+    accessTokenFromHeader,
+    accessTokenSecret
+  );
+  if (!verified) {
+    return res.status(401).send("Your access token cannot verify");
+  }
+  let user = await User.findOne({ email: verified.payload.email });
   if (user?.password) {
     delete user.password;
   }
@@ -33,23 +33,23 @@ const isAuth = async (req, res, next) => {
 };
 const isUser = async (req, res, next) => {
   // get access token from header
-  // const accessTokenFromHeader = req.headers.x_authorization;
-  // if (!accessTokenFromHeader) {
-  //   req.user = null;
-  //   return next();
-  // }
-  // const accessTokenSecret =
-  //   process.env.ACCESS_TOKEN_SECRET || jwtVariable.accessTokenSecret;
+  const accessTokenFromHeader = req.headers.x_authorization;
+  if (!accessTokenFromHeader) {
+    req.user = null;
+    return next();
+  }
+  const accessTokenSecret =
+    process.env.ACCESS_TOKEN_SECRET || jwtVariable.accessTokenSecret;
 
-  // const verified = await authMethod.verifyToken(
-  //   accessTokenFromHeader,
-  //   accessTokenSecret
-  // );
-  // if (!verified) {
-  //   req.user = null;
-  //   return next();
-  // }
-  let user = await User.findOne({ email: 'tranxuana2803@gmail.com'  });
+  const verified = await authMethod.verifyToken(
+    accessTokenFromHeader,
+    accessTokenSecret
+  );
+  if (!verified) {
+    req.user = null;
+    return next();
+  }
+  let user = await User.findOne({ email: verified.payload.email });
   if (user?.password) {
     delete user.password;
   }
