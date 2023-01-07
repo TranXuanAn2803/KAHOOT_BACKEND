@@ -33,7 +33,7 @@ const socketSetup = (httpServer) => {
           groupId
         );
 
-        const checkJoinPresentingPermission =
+        const checkJoinPresentingPermission = 
           await PresentationControler.checkJoinPresentingPermission(
             id,
             groupId,
@@ -111,6 +111,9 @@ const socketSetup = (httpServer) => {
             message: "Next slide not found",
           });
         } else {
+          present = await PresentationControler.validatePublicForm(
+            presentationId
+          );
           console.log("return next slide");
           return io.in(sessionId).emit("slide-changed", {
             status: 200,
