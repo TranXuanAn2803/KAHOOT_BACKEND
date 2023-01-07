@@ -50,7 +50,6 @@ const socketSetup = (httpServer) => {
             data: { message: "Session not found" },
           });
         else {
-          console.log("socket join session ", socket);
           await socket.join(current_session);
           io.in(current_session).emit("new-session-for-game", {
             status: "sucess",
