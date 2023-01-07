@@ -32,6 +32,29 @@ const getMyPrensent = async (req, res) => {
     return res.status(400).send({ message: 'Error in database conection' });
   }
 };
+const getMyOwnPrensent = async (req, res) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(400).send('User not found');
+  }
+  try {
+    const present = await Presentation.find(
+      { created_by: user._id },
+    )
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'created_by',
+        model: User,
+        select: 'username email',
+      })
+      .lean();
+    return res.status(200).send({ data: present });
+  } catch (err) {
+    console.error(err);
+    return res.status(400).send({ message: 'Error in database conection' });
+  }
+};
+
 const getAllCollaborators = async (req, res) => {
   const user = req.user;
   if (!user) {
@@ -602,6 +625,7 @@ const removeSharingPresent=async(req, res)=>{
     const { id } = req.params;
     const user= req.user;
     const groupPresent = await GroupPresentation.findOne({ _id: id }).lean();
+    console.log(id, groupPresent)
     if (!groupPresent) return res.status(400).send("Sharing presentation not found");
     try {
         const presentation = await Presentation.findOne({ _id: groupPresent.presentation_id });
@@ -613,7 +637,7 @@ const removeSharingPresent=async(req, res)=>{
         {
             return res.status(400).send("You cannot access this feature");
         }
-        await Presentation.deleteOne({ _id: id });
+        await GroupPresentation.deleteOne({ _id: id });
         return res.status(200).send({ data: groupPresent , message:  `Remove the presentation from group successfully`  });
     } catch (err) {
         console.error(err);
@@ -630,7 +654,7 @@ const getSharingPresent=async(req, res)=>{
         let result=[];
         for (let gp of groupPresent)
         {
-          const present = await Presentation.find({ _id: gp.presentation_id },{name:1, created_by: 1}).populate({path: "created_by",model: User,select: "username email name",}).lean();
+          const present = await Presentation.findOne({ _id: gp.presentation_id },{name:1, created_by: 1, status: 1}).populate({path: "created_by",model: User,select: "username email name",}).lean();
 
           result.push({...gp, present})
         }
@@ -682,7 +706,6 @@ const toggleStatus = async(req, res)=>{
                 }
             }
             break;
-
           }
           case 1:{
             const checkRole= await _checkCollaborRole(id, user._id)
@@ -775,6 +798,7 @@ const getSessionMethod = async (id, groupId) => {
 
 module.exports = {
     getMyPrensent,
+    getMyOwnPrensent,
     add,
     update,
     deleteById,

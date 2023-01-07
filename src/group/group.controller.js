@@ -4,6 +4,7 @@ const { User } = require('../user/user.model');
 const { v4: uuidv4 } = require('uuid');
 const { sendInvitationEmail } = require('../../config/nodemailer');
 const FRONTEND_URL = process.env.FRONTEND_URL;
+const GroupPresentation=require("../presentation/group/groupPresentation.model")
 
 const createGroup = async (req, res) => {
   const { name } = req.body;

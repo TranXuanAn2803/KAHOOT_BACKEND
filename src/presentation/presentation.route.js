@@ -8,7 +8,10 @@ const isAuth = authMiddleware.isAuth;
 const isUser = authMiddleware.isUser;
 
 // declare route
+router.get('/owner', isAuth, presentationController.getMyOwnPrensent);
+
 router.get('/', isAuth, presentationController.getMyPrensent);
+
 router.get(
   '/collaborators',
   isAuth,
