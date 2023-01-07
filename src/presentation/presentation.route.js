@@ -19,10 +19,12 @@ router.get(
 );
 router.get("/share/:id", isAuth, presentationController.getSharingPresent);
 router.delete("/share/:id", isAuth, presentationController.removeSharingPresent);
+router.post("/collabor/:id", isAuth, presentationController.addCollabor);
+
+router.post('/', isAuth, presentationController.add);
 
 router.get('/:id', isAuth, presentationController.getById);
 router.post('/addCollaborator', isAuth, presentationController.addCollaborator);
-router.post("/collabor/:id", isAuth, presentationController.addCollabor);
 router.delete("/collabor/:id", isAuth, presentationController.removeCollabor);
 router.put("/collabor/:id", isAuth, presentationController.setCollaborators);
 router.get("/collabor/:id", isAuth, presentationController.getColaborator);
