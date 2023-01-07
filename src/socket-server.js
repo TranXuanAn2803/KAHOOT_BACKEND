@@ -12,51 +12,49 @@ const questionMethod = require("./question/question.method");
 const { Server } = require("socket.io");
 
 const socketSetup = (httpServer) => {
-  console.log("Hello this is socket server");
   const io = new Server(httpServer, {
     cors: {
       origin: "*",
     },
   });
   io.on("connection", (socket) => {
-    console.log("Hello this is socket server");
-
     socket.on("disconnect", ({ id, username, reason }) => {
       console.log("Socket " + id + " was disconnected");
       console.log(reason);
-      io.to(id).emit("user-disconnect", { data: { username: username } });
+      io.in(id).emit("user-disconnect", { data: { username: username } });
     });
     socket.on("init-game", async ({ id, groupId, user }) => {
+      console.log("int game props ", id, groupId, user);
       try {
         let present = await PresentationControler.validatePublicForm(id);
-        console.log("present");
         const current_session = await PresentationControler.getSessionMethod(
           id,
           groupId
         );
 
-        const checkJoinPresentingPermisstion =
-          await PresentationControler.checkJoinPresentingPermisstion(
+        const checkJoinPresentingPermission =
+          await PresentationControler.checkJoinPresentingPermission(
             id,
             groupId,
             user
           );
-        console.log("check init game", present, checkJoinPresentingPermisstion);
-
-        if (!present || !current_session || !checkJoinPresentingPermisstion)
-          return io.to(id).emit("new-session-for-game", {
+        console.log(
+          "check init game ",
+          current_session,
+          checkJoinPresentingPermission
+        );
+        if (!present || !current_session || !checkJoinPresentingPermission)
+          return io.in(id).emit("new-session-for-game", {
             status: "error",
-            data: { message: "Session noot found" },
+            data: { message: "Session not found" },
           });
         else {
-          console.log("presentation current_session ", current_session);
+          console.log("socket join session ", socket);
           await socket.join(current_session);
           io.in(current_session).emit("new-session-for-game", {
             status: "sucess",
             data: { current_session: current_session },
           });
-
-          console.log("rooms ", socket.rooms);
         }
       } catch (err) {
         console.error(err);
@@ -85,39 +83,38 @@ const socketSetup = (httpServer) => {
     //       .emit('game-started', { status: 'error', message: err.message });
     //   }
     // });
-    socket.on("next-slide", async ({ id, presentationId, user }) => {
+    socket.on("next-slide", async ({ id: sessionId, presentationId, user }) => {
       try {
         let present = await PresentationControler.validatePublicForm(
           presentationId
         );
-        console.log("next-slide present ", present);
         const checkPermission =
           await PresentationControler.checkPermissionPresenting(
             presentationId,
-            id,
+            sessionId,
             user
           );
-        console.log("next-slide checkPermission present ", checkPermission);
 
         if (!present || !checkPermission)
-          return io.to(id).emit("slide-changed", {
-            status: "400",
+          return io.in(sessionId).emit("slide-changed", {
+            status: 400,
             message: "Present not found",
           });
         const nextSlide = await PresentationControler.updateCurrentSlide(
           presentationId,
-          id
+          sessionId
         );
-        console.log("next-slide nextSlide", nextSlide);
+        console.log("next slide ", nextSlide);
         if (!nextSlide) {
-          io.to(id).emit("slide-changed", {
-            status: "400",
+          return io.in(sessionId).emit("slide-changed", {
+            status: 400,
             message: "Next slide not found",
           });
         } else {
-          return io.to(id).emit("slide-changed", {
-            status: "200",
-            data: {},
+          console.log("return next slide");
+          return io.in(sessionId).emit("slide-changed", {
+            status: 200,
+            data: { currentSlide: present.current_slide },
           });
         }
       } catch (err) {
@@ -137,15 +134,14 @@ const socketSetup = (httpServer) => {
             user
           );
         if (!present || !checkPermission)
-          io.to(id).emit("slide-result", {
+          io.in(id).emit("slide-result", {
             status: "error",
             message: "Present not found",
           });
         else {
           let total = await getTotalAnswerBySlide(slideId);
-          console.log(total);
           if (!total)
-            io.to(id).emit("slide-result", {
+            io.in(id).emit("slide-result", {
               status: "error",
               message: "Error in getting slide result",
             });
@@ -155,7 +151,6 @@ const socketSetup = (httpServer) => {
               .emit("slide-result", { status: "sucess", data: { total } });
         }
       } catch (err) {
-        console.error(err);
         if (!present)
           socket
             .to(id)
@@ -171,7 +166,7 @@ const socketSetup = (httpServer) => {
             presentationId
           );
           if (!present) {
-            io.to(id).emit("user-adding-message-chat", {
+            io.in(id).emit("user-adding-message-chat", {
               status: "error",
               message: "Present not found",
             });
@@ -182,16 +177,14 @@ const socketSetup = (httpServer) => {
               username,
               message
             );
-            console.log(chat);
 
-            io.to(id).emit("user-adding-message-chat", {
+            io.in(id).emit("user-adding-message-chat", {
               status: "sucess",
               data: { chat },
             });
           }
         } catch (err) {
-          console.error(err);
-          io.to(id).emit("user-adding-message-chat", {
+          io.in(id).emit("user-adding-message-chat", {
             status: "error",
             message: err.message,
           });
@@ -206,7 +199,7 @@ const socketSetup = (httpServer) => {
             presentationId
           );
           if (!present) {
-            io.to(id).emit("user-adding-question", {
+            io.in(id).emit("user-adding-question", {
               status: "error",
               message: "Present not found",
             });
@@ -217,15 +210,14 @@ const socketSetup = (httpServer) => {
               username,
               content
             );
-            console.log(question);
-            io.to(id).emit("user-adding-question", {
+            io.in(id).emit("user-adding-question", {
               status: "sucess",
               data: { question },
             });
           }
         } catch (err) {
           console.error(err);
-          io.to(id).emit("user-adding-question", {
+          io.in(id).emit("user-adding-question", {
             status: "error",
             message: err.message,
           });
@@ -247,21 +239,20 @@ const socketSetup = (httpServer) => {
             );
 
           if (!present || !checkPermission) {
-            io.to(id).emit("host-mark-question", {
+            io.in(id).emit("host-mark-question", {
               status: "error",
               message: "Present not found",
             });
           } else {
             const answered = await questionMethod.toggleStatus(questionId);
-            console.log({ questionId: questionId, isAnswered: answered });
-            io.to(id).emit("host-mark-question", {
+            io.in(id).emit("host-mark-question", {
               status: "sucess",
               data: { questionId: questionId, isAnswered: answered },
             });
           }
         } catch (err) {
           console.error(err);
-          io.to(id).emit("host-mark-question", {
+          io.in(id).emit("host-mark-question", {
             status: "error",
             message: err.message,
           });
@@ -274,22 +265,20 @@ const socketSetup = (httpServer) => {
           presentationId
         );
         if (!present) {
-          io.to(id).emit("user-voting-question", {
+          io.in(id).emit("user-voting-question", {
             status: "error",
             message: "Present not found",
           });
         } else {
           const vote = await questionMethod.upVote(questionId);
-          console.log({ questionId: questionId, vote: vote });
 
-          io.to(id).emit("user-voting-question", {
+          io.in(id).emit("user-voting-question", {
             status: "sucess",
             data: { questionId: questionId, vote: vote },
           });
         }
       } catch (err) {
-        console.error(err);
-        io.to(id).emit("user-voting-question", {
+        io.in(id).emit("user-voting-question", {
           status: "error",
           message: err.message,
         });
@@ -304,21 +293,21 @@ const socketSetup = (httpServer) => {
             presentationId
           );
           if (!present) {
-            io.to(id).emit("get-answer-from-player", {
+            io.in(id).emit("get-answer-from-player", {
               status: "error",
               message: "Present not found",
             });
           } else {
             await addUserAnswer(username, options);
             let total = await getTotalAnswerBySlide(slideId);
-            io.to(id).emit("get-answer-from-player", {
+            io.in(id).emit("get-answer-from-player", {
               status: "sucess",
               data: { username, options, total },
             });
           }
         } catch (err) {
           console.error(err);
-          io.to(id).emit("get-answer-from-player", {
+          io.in(id).emit("get-answer-from-player", {
             status: "error",
             message: err.message,
           });
