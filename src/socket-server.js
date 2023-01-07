@@ -4,6 +4,7 @@ const SlideControler = require("./slide/slide.controller");
 
 const {
   addUserAnswer,
+  getSlideByOptionId,
   getTotalAnswerBySlide,
 } = require("./slide/option/option.method");
 const chatMethod = require("./chat/chat.method");
@@ -310,7 +311,9 @@ const socketSetup = (httpServer) => {
             });
           } else {
             await addUserAnswer(username, options);
+            const slideId = await getSlideByOptionId(options);
             let total = await getTotalAnswerBySlide(slideId);
+            console.log({ username, options, total });
             io.to(id).emit("get-answer-from-player", {
               status: "sucess",
               data: { username, options, total },

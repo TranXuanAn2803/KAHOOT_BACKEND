@@ -33,10 +33,11 @@ const addOptionsBySlide = async (slideId, options) => {
     }
 };
 const addUserAnswer = async(username, options)=>{
-    const option = await Option.findOne({_id: options});     
+    const option = await Option.find({_id: options});     
     if(!option)
     {
-        console.error("option not found");        
+        console.error("option not found");   
+        return null;     
     }
     try {
             let newAnswers=[];
@@ -55,9 +56,25 @@ const addUserAnswer = async(username, options)=>{
     }
     catch(err){
         console.error(err);
-        return false;
+        return null;
     }
 }
+const getSlideByOptionId = async(optionId)=>{
+    const option = await Option.findOne({_id: optionId});     
+    if(!option)
+    {
+        console.error("option not found");   
+        return null;     
+    }
+    try {                 
+        return option.slide_id;
+    }
+    catch(err){
+        console.error(err);
+        return null;
+    }
+}
+
 const getTotalAnswerBySlide =async(slideId)=>{
     const slide = await Slide.findOne({_id:slideId});     
     if(!slide)
@@ -108,5 +125,6 @@ module.exports = {
     addOptionsBySlide,
     addUserAnswer,
     getTotalAnswerBySlide,
-    deleteBySlide
+    deleteBySlide,
+    getSlideByOptionId
 }
