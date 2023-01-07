@@ -850,7 +850,7 @@ module.exports = {
     checkPermissionPresenting,
     getPresentingRole,
     getCurrentSlide,
-    checkJoinPresentingPermisstion,
+    checkJoinPresentingPermission,
     sharePresent,
     removeSharingPresent,
     getSharingPresent,
