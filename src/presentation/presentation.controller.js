@@ -743,6 +743,35 @@ const _isCoOwner = async (user, groupId) => {
     if (userGroup?.role == "co-owner") return true;
     return false;
 };
+const getSessionMethod = async (id, groupId) => {
+  try {
+    const presentation = await Presentation.findOne({
+      _id: id,
+    });
+    if(!presentation||!presentation.status) return null;
+
+    switch(presentation.status){
+        case 2:
+        {
+          const groupPresent = await GroupPresentation.findOne({ group_id: groupId, presentation_id: id }).lean();
+          await GroupPresentation.findOne({ group_id: groupId, presentation_id: id })
+          return  groupPresent.current_session;
+
+
+        }
+        case 3:
+        {
+          return  presentation.current_session;
+        }
+      }
+      return null;
+
+    }
+    catch(err){
+        console.error(err)
+        return null;
+    }
+};
 
 module.exports = {
     getMyPrensent,
@@ -768,5 +797,6 @@ module.exports = {
     checkJoinPresentingPermisstion,
     sharePresent,
     removeSharingPresent,
-    getSharingPresent
+    getSharingPresent,
+    getSessionMethod
 };
