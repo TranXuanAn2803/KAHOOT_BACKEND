@@ -30,22 +30,32 @@ const socketSetup = (httpServer) => {
       try {
         let present = await PresentationControler.validatePublicForm(id);
         console.log("present");
-        const current_session = await PresentationControler.getSessionMethod(id, groupId)
-        console.log(current_session);
+        const current_session = await PresentationControler.getSessionMethod(
+          id,
+          groupId
+        );
 
         const checkJoinPresentingPermisstion =
-        await PresentationControler.checkJoinPresentingPermisstion(id,groupId,user);
+          await PresentationControler.checkJoinPresentingPermisstion(
+            id,
+            groupId,
+            user
+          );
         console.log("check init game", present, checkJoinPresentingPermisstion);
 
-        if (!present||!current_session||!checkJoinPresentingPermisstion)            return io.to(id).emit('new-session-for-game', { status: 'error', data: {message: "Session noot found"} });
+        if (!present || !current_session || !checkJoinPresentingPermisstion)
+          return io.to(id).emit("new-session-for-game", {
+            status: "error",
+            data: { message: "Session noot found" },
+          });
         else {
           console.log("presentation current_session ", current_session);
-          await socket.join(current_session, () => {
-            io.in(current_session).emit("new-session-for-game", {
-              status: "sucess",
-              data: { current_session: current_session },
-            });
+          await socket.join(current_session);
+          io.in(current_session).emit("new-session-for-game", {
+            status: "sucess",
+            data: { current_session: current_session },
           });
+
           console.log("rooms ", socket.rooms);
         }
       } catch (err) {
