@@ -16,8 +16,7 @@ const socketSetup = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
       origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
-
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     },
   });
   io.on("connection", (socket) => {
@@ -35,7 +34,7 @@ const socketSetup = (httpServer) => {
           groupId
         );
 
-        const checkJoinPresentingPermission = 
+        const checkJoinPresentingPermission =
           await PresentationControler.checkJoinPresentingPermission(
             id,
             groupId,
@@ -48,14 +47,17 @@ const socketSetup = (httpServer) => {
         );
         if (!present || !current_session || !checkJoinPresentingPermission)
           return io.in(id).emit("new-session-for-game", {
-            status: "error",
+            status: 400,
             data: { message: "Session not found" },
           });
         else {
           await socket.join(current_session);
           io.in(current_session).emit("new-session-for-game", {
-            status: "sucess",
-            data: { current_session: current_session },
+            status: 200,
+            data: {
+              current_session: current_session,
+              message: `You are joined into session`,
+            },
           });
         }
       } catch (err) {

@@ -1,45 +1,47 @@
 // npm i && npm start
 
-const dotenv = require('dotenv');
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
+const dotenv = require("dotenv");
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
 const app = express();
-const cors = require('cors');
-const config = require('../config/config').getConfig();
-const authRouter = require('./auth/auth.route');
-const userRouter = require('./user/user.route');
-const groupRouter = require('./group/group.route');
-const presentationRouter = require('./presentation/presentation.route');
-const chatRouter = require('./chat/chat.route');
-const questionRouter = require('./question/question.route');
+const cors = require("cors");
+const config = require("../config/config").getConfig();
+const authRouter = require("./auth/auth.route");
+const userRouter = require("./user/user.route");
+const groupRouter = require("./group/group.route");
+const GroupPresentationRouter = require("./presentation/group/groupPresentation.route");
+const presentationRouter = require("./presentation/presentation.route");
+const chatRouter = require("./chat/chat.route");
+const questionRouter = require("./question/question.route");
 
-const slideRouter = require('./slide/slide.route');
-const { socketSetup } = require('./socket-server');
-const passport = require('passport');
-const session = require('express-session');
-const logger = require('morgan');
-const { User } = require('./user/user.model');
-const http = require('http');
+const slideRouter = require("./slide/slide.route");
+const { socketSetup } = require("./socket-server");
+const passport = require("passport");
+const session = require("express-session");
+const logger = require("morgan");
+const { User } = require("./user/user.model");
+const http = require("http");
 const httpServer = http.createServer(app);
-const LocalStrategy = require('passport-local').Strategy;
+const LocalStrategy = require("passport-local").Strategy;
 //tesst
 
 //#region import router
-const sessionRouter = require('./session/session.route');
+const sessionRouter = require("./session/session.route");
+const GroupPresentation = require("./presentation/group/groupPresentation.model");
 // #endregion
 //config cors
 const corsOptions = {
-  origin: '*',
+  origin: "*",
 };
 
 //intialize port
 const PORT = config.PORT;
 
 //config dotenv
-dotenv.config({ path: '../.env' });
+dotenv.config({ path: "../.env" });
 //config db
-require('../config/database');
+require("../config/database");
 
 // app use library
 app.use(cors(corsOptions));
@@ -51,7 +53,7 @@ app.use(bodyParser.json());
 // passport.use(User.createStrategy());
 app.use(
   session({
-    secret: 'secret',
+    secret: "secret",
     cookie: { maxAge: 60000000 },
     resave: false,
     saveUninitialized: true,
@@ -74,23 +76,24 @@ passport.deserializeUser(function (userId, done) {
       done(err);
     });
 });
-app.use(logger('common'));
+app.use(logger("common"));
 
-app.get('/', (req, res) => {
-  res.send('This is service of our project . Today is ' + new Date());
+app.get("/", (req, res) => {
+  res.send("This is service of our project . Today is " + new Date());
 });
 
-app.use('/auth', authRouter);
-app.use('/users', userRouter);
-app.use('/group', groupRouter);
-app.use('/presentation', presentationRouter);
-app.use('/slide', slideRouter);
-app.use('/chat', chatRouter);
-app.use('/question', questionRouter);
-app.use('/session', sessionRouter);
+app.use("/auth", authRouter);
+app.use("/users", userRouter);
+app.use("/group", groupRouter);
+app.use("/groupPresentation", GroupPresentationRouter);
+app.use("/presentation", presentationRouter);
+app.use("/slide", slideRouter);
+app.use("/chat", chatRouter);
+app.use("/question", questionRouter);
+app.use("/session", sessionRouter);
 
-app.use('/', (req, res) => {
-  res.status(404).send({ url: req.originalUrl + ' not found' });
+app.use("/", (req, res) => {
+  res.status(404).send({ url: req.originalUrl + " not found" });
 });
 
 // app
@@ -107,13 +110,12 @@ app.use('/', (req, res) => {
 //   });
 httpServer
   .listen(PORT)
-  .on('error', (err) => {
-    console.log('✘ Application failed to start');
-    console.error('✘', err.message);
+  .on("error", (err) => {
+    console.log("✘ Application failed to start");
+    console.error("✘", err.message);
     process.exit(0);
   })
-  .on('listening', () => {
+  .on("listening", () => {
     console.log(`Server start listening port: http://localhost:${PORT}`);
     socketSetup(httpServer);
-
   });
