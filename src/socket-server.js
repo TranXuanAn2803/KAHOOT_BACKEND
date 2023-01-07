@@ -41,7 +41,7 @@ const socketSetup = (httpServer) => {
         else {
           console.log("presentation current_session ", current_session);
           await socket.join(current_session, () => {
-            socket.in(current_session).emit("new-session-for-game", {
+            io.in(current_session).emit("new-session-for-game", {
               status: "sucess",
               data: { current_session: current_session },
             });
