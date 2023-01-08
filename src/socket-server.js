@@ -98,7 +98,7 @@ const socketSetup = (httpServer) => {
             sessionId,
             user
           );
-
+        console.log("next-slide ", present, checkPermission);
         if (!present || !checkPermission)
           return io.in(sessionId).emit("slide-changed", {
             status: 400,
@@ -118,10 +118,10 @@ const socketSetup = (httpServer) => {
           present = await PresentationControler.validatePublicForm(
             presentationId
           );
-          console.log("return next slide");
           return io.in(sessionId).emit("slide-changed", {
             status: 200,
             data: { currentSlide: present.current_slide },
+            message: "Change slide successfully",
           });
         }
       } catch (err) {
@@ -295,10 +295,18 @@ const socketSetup = (httpServer) => {
     socket.on(
       "send-answer-to-host",
       async ({ id, presentationId, username, options }) => {
+        console.log(
+          "send-answer-to-host ",
+          id,
+          presentationId,
+          username,
+          options
+        );
         try {
           let present = await PresentationControler.validatePublicForm(
             presentationId
           );
+          console.log("send-answer-to-host present", present);
           if (!present) {
             io.in(id).emit("get-answer-from-player", {
               status: "error",
@@ -308,9 +316,17 @@ const socketSetup = (httpServer) => {
             await addUserAnswer(username, options);
             const slideId = await getSlideByOptionId(options);
             let total = await getTotalAnswerBySlide(slideId);
+            console.log(
+              "send-answer-to-host data sent to show ",
+              username,
+              options,
+              total,
+              id
+            );
             io.in(id).emit("get-answer-from-player", {
-              status: "sucess",
+              status: 200,
               data: { username, options, total },
+              message: "Update answer ",
             });
           }
         } catch (err) {

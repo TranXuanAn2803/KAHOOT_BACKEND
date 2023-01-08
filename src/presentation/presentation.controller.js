@@ -345,6 +345,7 @@ const updateCurrentSlide = async (id, sessionId) => {
     const presentation = await Presentation.findOne({
       _id: id,
     });
+    console.log("updateCurrentSlide ", presentation);
     if (!presentation || !presentation.status) return false;
     switch (presentation.status) {
       case 2: {
@@ -463,6 +464,7 @@ const checkPermissionPresenting = async (id, sessionId, user) => {
     const presentation = await Presentation.findOne({
       _id: id,
     });
+    console.log("checkPermissionPresenting presentation ", presentation);
     if (!presentation || !presentation.status || !user || !user._id)
       return false;
     switch (presentation.status) {
