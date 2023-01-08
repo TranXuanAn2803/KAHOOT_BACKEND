@@ -8,12 +8,13 @@ const Slide = mongoose.model(
         type: String,
         default: "MULTIPLE_CHOICE",
       },
-      type: {
-        type: Schema.Types.Number,
-        // required: true,
-      },
+    //   type: {
+    //     type: Schema.Types.Number,
+    //     // required: true,
+    //   },
       slide_type: {
         type: String,
+        enum: ["MULTIPLE_CHOICE", "HEADING", "PARAGRAPH"],
         default: "MULTIPLE_CHOICE",
       },
       presentation_id: {
@@ -42,10 +43,5 @@ const Slide = mongoose.model(
   )
 );
 
-const SlideType = {
-  MultipleChoice: 1,
-  Heading: 2,
-  Paragraph: 3,
-};
 
-module.exports = { Slide, SlideType };
+module.exports = Slide;

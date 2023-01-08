@@ -146,9 +146,14 @@ const getMyGroup = async (req, res) => {
   let groups = [];
   for (const ug of userGroup) {
     const group = await Group.findOne({ id: ug.group_id });
-    const newGroup = group.toObject();
-    newGroup['role'] = ug.role;
-    if (group) groups.push(newGroup);
+    console.log(ug)
+    if (group) 
+    {
+      const newGroup = group.toObject();
+
+      newGroup['role'] = ug.role;
+      groups.push(newGroup);
+    }
   }
 
   return res.send({ groups });

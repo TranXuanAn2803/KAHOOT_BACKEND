@@ -86,6 +86,7 @@ const updateMutiSlide = async (req, res) => {
         return res.status(400).send("Presentation not found");
     if (String(presentation.created_by)!==String(user._id)) 
         return res.status(400).send("You cannot access this presentation");
+    console.log(id)
     const prevSlide = await Slide.find({presentation_id: id});
     try {
         if (prevSlide&&prevSlide.length> 0) {
@@ -103,14 +104,16 @@ const updateMutiSlide = async (req, res) => {
         }
         let newSlides=[];
         await uniqueSlide.map(async(s)=>{
+            console.log(s)
                 const slideId = new Types.ObjectId();
                 newSlides.push({
                     _id: slideId,
                     question: s.question,
                     presentation_id: id,
                     index: s.index,
+                    slide_type: s.slideType
                 })
-            await addOptionsBySlide(slideId, s.options);
+            if(s.slideType||s.slideType!='MULTIPLE_CHOICE') await addOptionsBySlide(slideId, s.options);
         })
         const slide = await Slide.insertMany(newSlides);          
         return res.status(200).send({ data: slide, message:  `Add successfully muti slide`   });
