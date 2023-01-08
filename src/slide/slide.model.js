@@ -31,6 +31,12 @@ const Slide = mongoose.model(
           default: null,
         },
       ],
+      heading: {
+        type: Schema.Types.String,
+      },
+      paragraph: {
+        type: Schema.Types.String,
+      },
     },
     { timestamps: true }
   )
