@@ -320,7 +320,17 @@ const checkJoinPresentingPermission = async (id, groupId, user) => {
 
     switch (presentation.status) {
       case 2: {
-        const group = await Group.findOne({ _id: groupId, is_deleted: false });
+          let group =null;
+          if ((typeof groupId === 'string' || groupId instanceof String)&&groupId.length>24 )
+          {
+
+            group={id: groupId}
+          }
+          else{
+            group = await Group.findOne({
+                _id: groupId,
+              });
+          }
         if(!group) return false;
         const userGroup = await UserGroup.find({
           group_id: group._id,

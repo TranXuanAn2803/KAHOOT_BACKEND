@@ -211,10 +211,9 @@ const _getSlideObjectByType = async (slide)=>
         }
         case 'HEADING':
         {
-
             return {
                     heading: slide.heading,
-                    subHeading: slide.subHeading,
+                    sub_heading: slide.subHeading,
                     slide_type: slide.slideType
             }
         }
