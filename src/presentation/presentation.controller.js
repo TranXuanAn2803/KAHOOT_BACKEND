@@ -290,10 +290,11 @@ const getCurrentSession = async (req, res) => {
           group_id: groupId,
           presentation_id: id,
         }).lean();
-        await GroupPresentation.findOne({
-          group_id: groupId,
-          presentation_id: id,
-        });
+        if (!groupPresent) {
+          return res
+            .status(400)
+            .send({ message: "Group presentation not found" });
+        }
         return res
           .status(200)
           .send({ data: { session: groupPresent.current_session } });
@@ -353,15 +354,15 @@ const updateCurrentSlide = async (id, sessionId) => {
           presentation_id: id,
           current_session: sessionId,
         }).lean();
+        console.log("updateCurrentSlide groupPresent ", groupPresent);
         const nextSlide = await Slide.find({
           presentation_id: id,
           index: { $gt: groupPresent.current_slide },
-        })
-          .sort({ index: 1 })
-          .lean();
+        }).lean();
+        console.log("updateCurrentSlide nextSlide ", nextSlide);
         if (!nextSlide || !nextSlide.length) return false;
         await GroupPresentation.updateOne(
-          { group_id: groupId, presentation_id: id },
+          { current_session: sessionId, presentation_id: id },
           { current_slide: nextSlide[0].index }
         );
         return true;
@@ -464,7 +465,11 @@ const checkPermissionPresenting = async (id, sessionId, user) => {
     const presentation = await Presentation.findOne({
       _id: id,
     });
-    console.log("checkPermissionPresenting presentation ", presentation);
+    console.log(
+      "checkPermissionPresenting presentation ",
+      presentation,
+      sessionId
+    );
     if (!presentation || !presentation.status || !user || !user._id)
       return false;
     switch (presentation.status) {
@@ -642,7 +647,6 @@ const sharePresent = async (req, res) => {
   const group = await Group.findOne({ id: groupId, is_deleted: false });
   if (!group) return res.status(400).send("Group not found");
   const isGroupOwner = await _isOwner(user, groupId);
-  console.log(isGroupOwner);
   if (String(presentation.created_by) !== String(user._id) || !isGroupOwner) {
     return res.status(400).send("You cannot access this feature");
   }
