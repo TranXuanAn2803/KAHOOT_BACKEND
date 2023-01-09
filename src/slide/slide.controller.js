@@ -106,20 +106,21 @@ const updateMutiSlide = async (req, res) => {
         await uniqueSlide.map(async(s)=>{
             const slideId = new Types.ObjectId();
             const slide = await _getSlideObjectByType(s)
-            if(!s.slideType||s.slideType=='MULTIPLE_CHOICE') 
-            {
-                console.log("each slide: ", (!s.slideType||s.slideType=='MULTIPLE_CHOICE'))
-
-                await addOptionsBySlide(slideId, s.options);
-            }
             newSlides.push({
                 _id: slideId,
                 presentation_id: id,
                 index: s.index,
                 ...slide
             })
+            if(!s.slideType||s.slideType=='MULTIPLE_CHOICE') 
+            {
+                console.log("each slide: ", (!s.slideType||s.slideType=='MULTIPLE_CHOICE'))
+
+                await addOptionsBySlide(slideId, s.options);
+            }
 
         })
+        console.log(newSlides);
         const slide = await Slide.insertMany(newSlides);          
         return res.status(200).send({ data: slide, message:  `Add successfully muti slide`   });
     }
