@@ -11,6 +11,8 @@ const chatMethod = require("./chat/chat.method");
 const questionMethod = require("./question/question.method");
 
 const { Server } = require("socket.io");
+const GroupPresentation = require("./presentation/group/groupPresentation.model");
+const Presentation = require("./presentation/presentation.model");
 
 const socketSetup = (httpServer) => {
   const io = new Server(httpServer, {
@@ -115,14 +117,28 @@ const socketSetup = (httpServer) => {
             message: "Next slide not found",
           });
         } else {
-          present = await PresentationControler.validatePublicForm(
-            presentationId
-          );
-          return io.in(sessionId).emit("slide-changed", {
-            status: 200,
-            data: { currentSlide: present.current_slide },
-            message: "Change slide successfully",
-          });
+          if (present.status !== 2) {
+            const newPresent = await Presentation.findOne({
+              _id: presentationId,
+            });
+            console.log("present now ", newPresent);
+            return io.in(sessionId).emit("slide-changed", {
+              status: 200,
+              data: { currentSlide: newPresent.current_slide },
+              message: "Change slide successfully",
+            });
+          } else {
+            const groupPresent = await GroupPresentation.findOne({
+              presentation_id: presentationId,
+              current_session: sessionId,
+            }).lean();
+            console.log("present now ", groupPresent);
+            return io.in(sessionId).emit("slide-changed", {
+              status: 200,
+              data: { currentSlide: groupPresent.current_slide },
+              message: "Change slide successfully",
+            });
+          }
         }
       } catch (err) {
         console.error(err);
