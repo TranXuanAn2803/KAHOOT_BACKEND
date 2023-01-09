@@ -8,7 +8,7 @@ const { User } = require("../user/user.model");
 const authMethod = require("./auth.method");
 
 const isAuth = async (req, res, next) => {
-  //get access token from header
+  get access token from header
   const accessTokenFromHeader = req.headers.x_authorization;
   if (!accessTokenFromHeader) {
     return res.status(401).send("Cannot find access Token");
