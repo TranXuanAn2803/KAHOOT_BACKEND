@@ -377,13 +377,9 @@ const getAGroup = async (req, res) => {
 };
 const _isPresenting = async(id)=>{
   const group = await Group.find({ id: id }).lean();
-  const groupPresent = await GroupPresentation.find({ group_id: group._id }).lean();
-  for (let gp of groupPresent)
-  {
-    const present = await Presentation.find({ _id: gp.presentation_id },{status: 1}).lean();
-    if(present.status!=0) return false;
-  }
-  return true;
+  const groupPresent = await GroupPresentation.find({ group_id: group._id, current_session: { $ne: "" }, }).lean();
+  if(!groupPresent&&groupPresent.length==0) return true;
+  return false;
 }
 const deleteGroup = async (req, res) => {
   const groupId = req.params.id;
@@ -401,6 +397,23 @@ const deleteGroup = async (req, res) => {
 
   return res.send({ group });
 };
+const getCurrentPresent = async (req, res) => {
+  const groupId = req.params.id;
+  const group = await Group.find({ id: groupId, is_deleted: false });
+  if (!group) {
+    return res.status(405).send('You are not allowed to access this');
+  }
+  const groupPresent = await GroupPresentation.findOne({ group_id: group._id, current_session: { $ne: "" }, }).lean();
+
+  const present = await Presentation.findOne(
+    { _id: groupPresent.presentation_id },
+    { name: 1 }
+  )
+  if (!groupPresent||!present) {
+    return res.status(405).send('Group present not found');
+  }
+  return res.send({ ...groupPresent, present });
+};
 
 module.exports = {
   createGroup,
@@ -416,4 +429,6 @@ module.exports = {
   sendInvitationMail,
   confirmMail,
   getAGroup,
+  getCurrentPresent,
+  deleteGroup
 };

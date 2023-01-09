@@ -734,10 +734,11 @@ const toggleStatus = async (req, res) => {
   let { status, groupId } = req.body;
   if (status) status = Math.max(Math.min(status, 3), 0);
   const oldStatus = presentation.status;
-  const newSessions = uuidv4();
+  let newSessions = uuidv4();
   try {
     switch (status) {
       case 0: {
+        newSessions =""
         switch (oldStatus) {
           case 1: {
             const checkRole = await _checkCollaborRole(id, user._id);
@@ -761,6 +762,22 @@ const toggleStatus = async (req, res) => {
                 .status(400)
                 .send("You cannot access presentation in status " + oldStatus);
             }
+            await GroupPresentation.updateOne(
+              { group_id: groupId, presentation_id: id },
+              { current_session: "", current_slide: 0 }
+            );
+            const ortherGroupPresent = await GroupPresentation.find({
+              group_id: { $ne: groupId },
+              presentation_id: id,
+              current_session: { $ne: "" },
+            }).lean();
+            if(ortherGroupPresent&&ortherGroupPresent.length>0)
+            {
+              return res.status(200).send({
+                  data: {},
+                  message: `Update successfully presentation id ${id}`,
+              });
+            }
             break;
           }
           case 3: {
@@ -769,12 +786,14 @@ const toggleStatus = async (req, res) => {
                 .status(400)
                 .send("You cannot access this presentation");
             }
+            
             break;
           }
         }
         break;
       }
       case 1: {
+        newSessions =""
         const checkRole = await _checkCollaborRole(id, user._id);
         console.log(oldStatus > 0 || !checkRole);
         console.log(oldStatus);
@@ -786,17 +805,13 @@ const toggleStatus = async (req, res) => {
         break;
       }
       case 2: {
+        newSessions =""
+
         const groupPresent = await GroupPresentation.findOne({
           group_id: ObjectID(groupId),
           presentation_id: ObjectID(id),
         }).lean();
-
-        const checkPermission =
-          (await _isCoOwner(user, groupId)) || (await _isOwner(user, groupId));
-        await GroupPresentation.updateOne(
-          { group_id: groupId, presentation_id: id },
-          { current_session: newSessions, current_slide: 0 }
-        );
+        const checkPermission = (await _isCoOwner(user, groupId)) || (await _isOwner(user, groupId));
         console.log("checkPermission found", checkPermission);
 
         if (
@@ -809,6 +824,23 @@ const toggleStatus = async (req, res) => {
             .status(400)
             .send("You cannot access presentation in status" + oldStatus);
         }
+        const ortherGroupPresent = await GroupPresentation.find({
+          group_id: groupId,
+          presentation_id: { $ne: id },
+          current_session: { $ne: "" },
+        }).lean();
+        console.log(ortherGroupPresent)
+        if(ortherGroupPresent&&ortherGroupPresent.length>0)
+        {
+          return res
+            .status(400)
+            .send("There are another present stating in this group");
+        }
+        await GroupPresentation.updateOne(
+          { group_id: groupId, presentation_id: id },
+          { current_session: newSessions, current_slide: 0 }
+        );
+
         break;
       }
       case 3: {

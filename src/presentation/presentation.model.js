@@ -19,6 +19,7 @@ const Presentation = mongoose.model(
       current_session:{
         type: String,
         required: false,
+        default: "",
       },
       current_slide:{
         type: Number,
