@@ -38,7 +38,8 @@ const addMember = async (req, res) => {
   const groupId = req.params.id;
   const checkPermission = await _isOwner(req.user, groupId);
   const isPresenting = await _isPresenting(groupId)
-  if (!checkPermission||!isPresenting) {
+  console.log(isPresenting)
+  if (!checkPermission||isPresenting) {
     return res.status(405).send('You are not allowed to access this');
   }
   const user = await _getUserByEmail(email);
@@ -77,7 +78,7 @@ const toggleRole = async (req, res) => {
   const userGroup = await _getUserGroupById(memberId);
   const isPresenting = await _isPresenting(userGroup.group_id)
 
-  if (!userGroup||!isPresenting) {
+  if (!userGroup||isPresenting) {
     return res
       .status(400)
       .send(
@@ -123,7 +124,7 @@ const deleteMember = async (req, res) => {
   const userGroup = await UserGroup.find({ id: memberId, is_deleted: false });
   const checkPermission = await _isOwner(req.user, groupId);
   const isPresenting = await _isPresenting(userGroup.group_id)
-  if (!checkPermission||!isPresenting) {
+  if (!checkPermission||isPresenting) {
     return res.status(405).send('You are not allowed to access this');
   }
 
@@ -234,7 +235,7 @@ const exitGroup = async (req, res) => {
   const groupId = req.params.id;
   const user = req.user;
   const isPresenting = await _isPresenting(groupId)
-  if (!isPresenting) {
+  if (isPresenting) {
     return res.status(405).send('You are not allowed to access this');
   }
 
@@ -270,7 +271,7 @@ const joinGroup = async (req, res) => {
   const validate = await _validateGroup(groupId);
   console.log(validate);
   const isPresenting = await _isPresenting(groupId)
-  if (!isPresenting) {
+  if (isPresenting) {
     return res.status(405).send('You are not allowed to access this');
   }
 
@@ -377,8 +378,8 @@ const getAGroup = async (req, res) => {
 };
 const _isPresenting = async(id)=>{
   const group = await Group.find({ id: id }).lean();
-  const groupPresent = await GroupPresentation.find({ group_id: group._id, current_session: { $ne: "" }, }).lean();
-  if(!groupPresent&&groupPresent.length==0) return true;
+  const groupPresent = await GroupPresentation.findOne({ group_id: group._id, current_session: { $ne: "" }, }).lean();
+  if(!groupPresent||!groupPresent.current_session) return true;
   return false;
 }
 const deleteGroup = async (req, res) => {
@@ -386,7 +387,7 @@ const deleteGroup = async (req, res) => {
   const group = await Group.find({ id: groupId, is_deleted: false });
   const checkPermission = await _isOwner(req.user, groupId);
   const isPresenting = await _isPresenting(userGroup.group_id)
-  if (!group||!isPresenting||!checkPermission) {
+  if (!group||isPresenting||!checkPermission) {
     return res.status(405).send('You are not allowed to access this');
   }
 

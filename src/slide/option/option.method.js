@@ -24,7 +24,6 @@ const addOptionsBySlide = async (slideId, options) => {
       });
     });
     const option = await Option.insertMany(newOption);
-    console.log(option);
     return option;
   } catch (err) {
     console.error(err);

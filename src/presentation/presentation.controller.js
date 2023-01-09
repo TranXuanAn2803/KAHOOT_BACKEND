@@ -775,7 +775,7 @@ const toggleStatus = async (req, res) => {
               presentation_id: id,
               current_session: { $ne: "" },
             }).lean();
-            if(ortherGroupPresent&&ortherGroupPresent.length>0)
+            if(ortherGroupPresent&&ortherGroupPresent.current_session)
             {
               return res.status(200).send({
                   data: {},
@@ -809,15 +809,13 @@ const toggleStatus = async (req, res) => {
         break;
       }
       case 2: {
-        newSessions =""
-
         const groupPresent = await GroupPresentation.findOne({
           group_id: ObjectID(groupId),
           presentation_id: ObjectID(id),
         }).lean();
         const checkPermission = (await _isCoOwner(user, groupId)) || (await _isOwner(user, groupId));
-        console.log("checkPermission found", checkPermission);
-
+        console.log("checkPermission found", checkPermission, oldStatus);
+        
         if (
           oldStatus == 1 ||
           oldStatus == 3 ||
@@ -828,13 +826,13 @@ const toggleStatus = async (req, res) => {
             .status(400)
             .send("You cannot access presentation in status" + oldStatus);
         }
-        const ortherGroupPresent = await GroupPresentation.find({
+        const ortherGroupPresent = await GroupPresentation.findOne({
           group_id: groupId,
           presentation_id: { $ne: id },
           current_session: { $ne: "" },
         }).lean();
-        console.log(ortherGroupPresent)
-        if(ortherGroupPresent&&ortherGroupPresent.length>0)
+        console.log("ortherGroupPresent ", ortherGroupPresent)
+        if(ortherGroupPresent&&ortherGroupPresent.current_session)
         {
           return res
             .status(400)
@@ -844,6 +842,7 @@ const toggleStatus = async (req, res) => {
           { group_id: groupId, presentation_id: id },
           { current_session: newSessions, current_slide: 0 }
         );
+        newSessions =""
 
         break;
       }
@@ -880,9 +879,20 @@ const _getUserByEmail = async (email) => {
   return user;
 };
 const _isOwner = async (user, groupId) => {
-  console.log("isOwner ", user, groupId);
+  let group =null;
+  if ((typeof groupId === 'string' || groupId instanceof String)&&groupId.length>24 )
+  {
+
+    group={id: groupId}
+  }
+  else{
+    group = await Group.findOne({
+        _id: groupId,
+      });
+  }
+  if(!group) return false;
   const userGroup = await UserGroup.findOne({
-    group_id: groupId,
+    group_id: group.id,
     user_id: user.id,
     is_deleted: false,
   });
@@ -890,8 +900,19 @@ const _isOwner = async (user, groupId) => {
   return false;
 };
 const _isCoOwner = async (user, groupId) => {
+  let group =null;
+  if ((typeof groupId === 'string' || groupId instanceof String)&&groupId.length>24 )
+  {
+    group={id: groupId}
+  }
+  else{
+    group = await Group.findOne({
+        _id: groupId,
+      });
+  }
+  if(!group) return false;
   const userGroup = await UserGroup.findOne({
-    group_id: groupId,
+    group_id: group.id,
     user_id: user.id,
     is_deleted: false,
   });

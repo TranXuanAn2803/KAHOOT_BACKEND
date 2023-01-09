@@ -25,6 +25,18 @@ const Slide = mongoose.model(
         type: Number,
         required: true,
       },
+      heading: {
+        type: String,
+        required: false,
+      },
+      sub_heading: {
+        type: String,
+        required: false,
+      },
+      paragraph: {
+        type: String,
+        required: false,
+      },
       answer: [
         {
           type: Schema.Types.ObjectId,
@@ -32,12 +44,6 @@ const Slide = mongoose.model(
           default: null,
         },
       ],
-      heading: {
-        type: Schema.Types.String,
-      },
-      paragraph: {
-        type: Schema.Types.String,
-      },
     },
     { timestamps: true }
   )

@@ -104,16 +104,21 @@ const updateMutiSlide = async (req, res) => {
         }
         let newSlides=[];
         await uniqueSlide.map(async(s)=>{
-            console.log(s)
-                const slideId = new Types.ObjectId();
-                newSlides.push({
-                    _id: slideId,
-                    question: s.question,
-                    presentation_id: id,
-                    index: s.index,
-                    slide_type: s.slideType
-                })
-            if(s.slideType||s.slideType!='MULTIPLE_CHOICE') await addOptionsBySlide(slideId, s.options);
+            const slideId = new Types.ObjectId();
+            const slide = await _getSlideObjectByType(s)
+            if(!s.slideType||s.slideType=='MULTIPLE_CHOICE') 
+            {
+                console.log("each slide: ", (!s.slideType||s.slideType=='MULTIPLE_CHOICE'))
+
+                await addOptionsBySlide(slideId, s.options);
+            }
+            newSlides.push({
+                _id: slideId,
+                presentation_id: id,
+                index: s.index,
+                ...slide
+            })
+
         })
         const slide = await Slide.insertMany(newSlides);          
         return res.status(200).send({ data: slide, message:  `Add successfully muti slide`   });
@@ -191,6 +196,44 @@ const getSlideMethod =async(presentation_id)=>
     }
 
 
+}
+const _getSlideObjectByType = async (slide)=>
+{
+    switch (slide.slideType)
+    {
+        case 'MULTIPLE_CHOICE':
+        {
+            return {
+                    question: slide.question,
+                    slide_type: slide.slideType
+            }
+        }
+        case 'HEADING':
+        {
+
+            return {
+                    heading: slide.heading,
+                    subHeading: slide.subHeading,
+                    slide_type: slide.slideType
+            }
+        }
+        case 'PARAGRAPH':
+        {
+
+            return {
+                    heading: slide.heading,
+                    paragraph: slide.paragraph,
+                    slide_type: slide.slideType
+            }
+        }
+        default:{
+            return {
+                    question: slide.question,
+            }
+
+        }
+    }
+    return {};
 }
 module.exports = {
     updateMutiSlide,
