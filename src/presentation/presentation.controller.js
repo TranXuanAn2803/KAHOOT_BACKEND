@@ -320,18 +320,18 @@ const checkJoinPresentingPermission = async (id, groupId, user) => {
 
     switch (presentation.status) {
       case 2: {
-          let group =null;
-          if ((typeof groupId === 'string' || groupId instanceof String)&&groupId.length>24 )
-          {
-
-            group={id: groupId}
-          }
-          else{
-            group = await Group.findOne({
-                _id: groupId,
-              });
-          }
-        if(!group) return false;
+        let group = null;
+        if (
+          (typeof groupId === "string" || groupId instanceof String) &&
+          groupId.length > 24
+        ) {
+          group = { id: groupId };
+        } else {
+          group = await Group.findOne({
+            _id: groupId,
+          });
+        }
+        if (!group) return false;
         const userGroup = await UserGroup.find({
           group_id: group._id,
           user_id: user.id,
@@ -472,22 +472,19 @@ const getPresentingRole = async (req, res) => {
   }
 };
 
-const checkPermissionPresenting = async (id, sessionId, user) => {
+const checkPermissionPresenting = async (presentationId, sessionId, user) => {
   try {
     const presentation = await Presentation.findOne({
-      _id: id,
+      _id: presentationId,
     });
-    console.log(
-      "checkPermissionPresenting presentation ",
-      presentation,
-      sessionId
-    );
-    if (!presentation || !presentation.status || !user || !user._id)
+
+    if (!presentation || !presentation.status || !user) {
       return false;
+    }
     switch (presentation.status) {
       case 2: {
         const groupPresent = await GroupPresentation.findOne({
-          presentation_id: id,
+          presentation_id: presentationId,
           current_session: sessionId,
         }).lean();
         const checkPermission =
@@ -499,10 +496,7 @@ const checkPermissionPresenting = async (id, sessionId, user) => {
         return true;
       }
       case 3: {
-        console.log(user._id);
-        console.log(presentation.created_by);
-
-        if (String(presentation.created_by) !== String(user._id)) {
+        if (String(presentation.created_by._id) !== String(user._id)) {
           return false;
         }
         return true;
@@ -754,7 +748,7 @@ const toggleStatus = async (req, res) => {
   try {
     switch (status) {
       case 0: {
-        newSessions =""
+        newSessions = "";
         switch (oldStatus) {
           case 1: {
             const checkRole = await _checkCollaborRole(id, user._id);
@@ -787,11 +781,10 @@ const toggleStatus = async (req, res) => {
               presentation_id: id,
               current_session: { $ne: "" },
             }).lean();
-            if(ortherGroupPresent&&ortherGroupPresent.current_session)
-            {
+            if (ortherGroupPresent && ortherGroupPresent.current_session) {
               return res.status(200).send({
-                  data: {},
-                  message: `Update successfully presentation id ${id}`,
+                data: {},
+                message: `Update successfully presentation id ${id}`,
               });
             }
             break;
@@ -802,14 +795,14 @@ const toggleStatus = async (req, res) => {
                 .status(400)
                 .send("You cannot access this presentation");
             }
-            
+
             break;
           }
         }
         break;
       }
       case 1: {
-        newSessions =""
+        newSessions = "";
         const checkRole = await _checkCollaborRole(id, user._id);
         console.log(oldStatus > 0 || !checkRole);
         console.log(oldStatus);
@@ -825,9 +818,10 @@ const toggleStatus = async (req, res) => {
           group_id: ObjectID(groupId),
           presentation_id: ObjectID(id),
         }).lean();
-        const checkPermission = (await _isCoOwner(user, groupId)) || (await _isOwner(user, groupId));
+        const checkPermission =
+          (await _isCoOwner(user, groupId)) || (await _isOwner(user, groupId));
         console.log("checkPermission found", checkPermission, oldStatus);
-        
+
         if (
           oldStatus == 1 ||
           oldStatus == 3 ||
@@ -843,9 +837,8 @@ const toggleStatus = async (req, res) => {
           presentation_id: { $ne: id },
           current_session: { $ne: "" },
         }).lean();
-        console.log("ortherGroupPresent ", ortherGroupPresent)
-        if(ortherGroupPresent&&ortherGroupPresent.current_session)
-        {
+        console.log("ortherGroupPresent ", ortherGroupPresent);
+        if (ortherGroupPresent && ortherGroupPresent.current_session) {
           return res
             .status(400)
             .send("There are another present stating in this group");
@@ -854,7 +847,7 @@ const toggleStatus = async (req, res) => {
           { group_id: groupId, presentation_id: id },
           { current_session: newSessions, current_slide: 0 }
         );
-        newSessions =""
+        newSessions = "";
 
         break;
       }
@@ -891,18 +884,18 @@ const _getUserByEmail = async (email) => {
   return user;
 };
 const _isOwner = async (user, groupId) => {
-  let group =null;
-  if ((typeof groupId === 'string' || groupId instanceof String)&&groupId.length>24 )
-  {
-
-    group={id: groupId}
-  }
-  else{
+  let group = null;
+  if (
+    (typeof groupId === "string" || groupId instanceof String) &&
+    groupId.length > 24
+  ) {
+    group = { id: groupId };
+  } else {
     group = await Group.findOne({
-        _id: groupId,
-      });
+      _id: groupId,
+    });
   }
-  if(!group) return false;
+  if (!group) return false;
   const userGroup = await UserGroup.findOne({
     group_id: group.id,
     user_id: user.id,
@@ -912,17 +905,18 @@ const _isOwner = async (user, groupId) => {
   return false;
 };
 const _isCoOwner = async (user, groupId) => {
-  let group =null;
-  if ((typeof groupId === 'string' || groupId instanceof String)&&groupId.length>24 )
-  {
-    group={id: groupId}
-  }
-  else{
+  let group = null;
+  if (
+    (typeof groupId === "string" || groupId instanceof String) &&
+    groupId.length > 24
+  ) {
+    group = { id: groupId };
+  } else {
     group = await Group.findOne({
-        _id: groupId,
-      });
+      _id: groupId,
+    });
   }
-  if(!group) return false;
+  if (!group) return false;
   const userGroup = await UserGroup.findOne({
     group_id: group.id,
     user_id: user.id,

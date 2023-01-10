@@ -262,49 +262,64 @@ const socketSetup = (httpServer) => {
               id,
               user
             );
-
-          if (!present || !checkPermission) {
+          console.log("mark-answered-question ", present, checkPermission);
+          if (!present) {
             io.in(id).emit("host-mark-question", {
-              status: "error",
-              message: "Present not found",
+              status: 400,
+              message: "Present not found ",
+            });
+          } else if (!checkPermission) {
+            io.in(id).emit("host-mark-question", {
+              status: 400,
+              message:
+                "Sorry you must be owner or co-owner to mark this question",
             });
           } else {
-            const answered = await questionMethod.toggleStatus(questionId);
+            await questionMethod.toggleStatus(questionId);
+            const newQuestion = await questionMethod.getAllQuestion(
+              id,
+              presentationId
+            );
+            console.log("newQuestion ", newQuestion);
             io.in(id).emit("host-mark-question", {
-              status: "sucess",
-              data: { questionId: questionId, isAnswered: answered },
+              status: 200,
+              data: { newQuestion },
             });
           }
         } catch (err) {
           console.error(err);
           io.in(id).emit("host-mark-question", {
-            status: "error",
+            status: 400,
             message: err.message,
           });
         }
       }
     );
     socket.on("upvote-question", async ({ id, presentationId, questionId }) => {
+      console.log("upvote-question ", id, presentationId, questionId);
       try {
         let present = await PresentationControler.validatePublicForm(
           presentationId
         );
         if (!present) {
           io.in(id).emit("user-voting-question", {
-            status: "error",
+            status: 400,
             message: "Present not found",
           });
         } else {
-          const vote = await questionMethod.upVote(questionId);
-
+          await questionMethod.upVote(questionId);
+          const newVote = await questionMethod.getAllQuestion(
+            id,
+            presentationId
+          );
           io.in(id).emit("user-voting-question", {
-            status: "sucess",
-            data: { questionId: questionId, vote: vote },
+            status: 200,
+            data: { newVote },
           });
         }
       } catch (err) {
         io.in(id).emit("user-voting-question", {
-          status: "error",
+          status: 400,
           message: err.message,
         });
       }
