@@ -184,31 +184,34 @@ const socketSetup = (httpServer) => {
     socket.on(
       "add-chat-message",
       async ({ id, presentationId, username, message }) => {
+        console.log(
+          "received add-chat-message ",
+          id,
+          presentationId,
+          username,
+          message
+        );
         try {
           let present = await PresentationControler.validatePublicForm(
             presentationId
           );
           if (!present) {
             io.in(id).emit("user-adding-message-chat", {
-              status: "error",
+              status: 400,
               message: "Present not found",
             });
           } else {
-            const chat = await chatMethod.add(
-              id,
-              presentationId,
-              username,
-              message
-            );
-
+            await chatMethod.add(id, presentationId, username, message);
+            const newChat = await chatMethod.getAllChat(id, presentationId);
+            console.log("newChat ", newChat);
             io.in(id).emit("user-adding-message-chat", {
-              status: "sucess",
-              data: { chat },
+              status: 200,
+              data: { newChat },
             });
           }
         } catch (err) {
           io.in(id).emit("user-adding-message-chat", {
-            status: "error",
+            status: 400,
             message: err.message,
           });
         }
