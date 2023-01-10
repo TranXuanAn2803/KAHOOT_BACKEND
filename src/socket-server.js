@@ -162,7 +162,7 @@ const socketSetup = (httpServer) => {
             message: "Present not found",
           });
         else {
-          let total = await getTotalAnswerBySlide(slideId);
+          let total = await getTotalAnswerBySlide(slideId, id);
           if (!total)
             io.in(id).emit("slide-result", {
               status: "error",
@@ -348,7 +348,7 @@ const socketSetup = (httpServer) => {
           } else {
             await addUserAnswer(username, options);
             const slideId = await getSlideByOptionId(options);
-            let total = await getTotalAnswerBySlide(slideId);
+            let total = await getTotalAnswerBySlide(slideId, id);
             console.log(
               "send-answer-to-host data sent to show ",
               username,

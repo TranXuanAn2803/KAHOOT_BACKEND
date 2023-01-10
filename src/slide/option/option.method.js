@@ -30,7 +30,7 @@ const addOptionsBySlide = async (slideId, options) => {
     return false;
   }
 };
-const addUserAnswer = async (username, options) => {
+const addUserAnswer = async (username, options, sessionId) => {
   const option = await Option.find({ _id: options });
   console.log("addUserAnswer ", option);
   if (!option) {
@@ -44,6 +44,7 @@ const addUserAnswer = async (username, options) => {
         _id: new Types.ObjectId(),
         username: username,
         option_id: option,
+        session_id: sessionId
       });
     });
     const answer = await UserOption.insertMany(newAnswers);
@@ -67,7 +68,7 @@ const getSlideByOptionId = async (optionId) => {
   }
 };
 
-const getTotalAnswerBySlide = async (slideId) => {
+const getTotalAnswerBySlide = async (slideId, sessionId) => {
   const slide = await Slide.findOne({ _id: slideId });
   if (!slide) {
     console.error("Slide not found");
@@ -78,8 +79,8 @@ const getTotalAnswerBySlide = async (slideId) => {
     let userAnswer = [];
     for (let option of options) {
       const [total, user] = await Promise.all([
-        UserOption.count({ option_id: option.id }),
-        UserOption.find({ option_id: option.id }, { username: 1 }).lean(),
+        UserOption.count({ option_id: option.id, session_id:sessionId }),
+        UserOption.find({ option_id: option.id, session_id:sessionId }, { username: 1 }).lean(),
       ]);
       let answer = {
         user: user,
