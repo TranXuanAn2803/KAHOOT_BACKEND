@@ -15,8 +15,13 @@ const UserOption = mongoose.model(
         user_id:{
             type: Schema.Types.ObjectId, 
             ref: 'users' 
-        }
         },
+        session_id:{
+            type: String, 
+            required: true
+        }
+
+    },
         { timestamps: true }
     )
 );
