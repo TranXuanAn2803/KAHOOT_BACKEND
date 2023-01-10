@@ -20,5 +20,6 @@ router.get("/isMember/:id", isAuth, groupController.isMember);
 router.post("/sendInvitation/:id", isAuth, groupController.sendInvitationMail);
 router.get("/confirmMail/:id", isAuth, groupController.confirmMail);
 router.get("/:id", isAuth, groupController.getAGroup);
+router.delete("/:id", isAuth, groupController.deleteGroup);
 
 module.exports = router;

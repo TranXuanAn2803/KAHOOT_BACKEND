@@ -84,7 +84,8 @@ const updateMutiSlide = async (req, res) => {
     const presentation = await Presentation.findOne({_id: id});
     if (!presentation) 
         return res.status(400).send("Presentation not found");
-    if (String(presentation.created_by)!==String(user._id)) 
+    const checkCollaborRole = _checkCollaborRole(id, user._id); 
+    if (!checkCollaborRole) 
         return res.status(400).send("You cannot access this presentation");
     console.log(id)
     const prevSlide = await Slide.find({presentation_id: id});
@@ -235,6 +236,19 @@ const _getSlideObjectByType = async (slide)=>
     }
     return {};
 }
+const _checkCollaborRole = async (id, userId) => {
+  const presentation = await Presentation.findOne({ _id: id });
+  if (!presentation || !userId) return false;
+  if (String(presentation.created_by) === String(userId)) return true;
+  // console.log(presentation.collaborators)
+  const notExist = presentation.collaborators.filter((c) => {
+    return String(c) === String(userId);
+  });
+  console.log(notExist);
+  if (notExist && notExist.length > 0) return true;
+  return false;
+};
+
 module.exports = {
     updateMutiSlide,
     getByPresent,

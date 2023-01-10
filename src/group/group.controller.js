@@ -121,12 +121,19 @@ const toggleRole = async (req, res) => {
 };
 const deleteMember = async (req, res) => {
   const memberId = req.params.id;
-  const userGroup = await UserGroup.find({ id: memberId, is_deleted: false });
-  const checkPermission = await _isOwner(req.user, groupId);
+  const userGroup = await UserGroup.findOne({ id: memberId, is_deleted: false });
+  if (!userGroup) {
+    return res.status(405).send('Member not found');
+  }
+  const checkPermission = await _isOwner(req.user, userGroup.group_id);
   const isPresenting = await _isPresenting(userGroup.group_id)
   if (!checkPermission||isPresenting) {
     return res.status(405).send('You are not allowed to access this');
   }
+  if (userGroup.role=="owner") {
+    return res.status(405).send('You can not remove owner');
+  }
+
 
   console.log(userGroup);
   const member = await UserGroup.updateOne(
@@ -379,18 +386,17 @@ const getAGroup = async (req, res) => {
 const _isPresenting = async(id)=>{
   const group = await Group.find({ id: id }).lean();
   const groupPresent = await GroupPresentation.findOne({ group_id: group._id, current_session: { $ne: "" }, }).lean();
-  if(!groupPresent||!groupPresent.current_session) return true;
-  return false;
+  if(!groupPresent||!groupPresent.current_session) return false;
+  return true;
 }
 const deleteGroup = async (req, res) => {
   const groupId = req.params.id;
   const group = await Group.find({ id: groupId, is_deleted: false });
   const checkPermission = await _isOwner(req.user, groupId);
-  const isPresenting = await _isPresenting(userGroup.group_id)
+  const isPresenting = await _isPresenting(groupId)
   if (!group||isPresenting||!checkPermission) {
     return res.status(405).send('You are not allowed to access this');
   }
-
   await Group.updateOne(
     { id: groupId },
     { is_deleted: true }
