@@ -153,7 +153,7 @@ const getMyGroup = async (req, res) => {
   console.log('userGroup ', userGroup);
   let groups = [];
   for (const ug of userGroup) {
-    const group = await Group.findOne({ id: ug.group_id });
+    const group = await Group.findOne({ id: ug.group_id, is_deleted: false });
     console.log(ug)
     if (group) 
     {
@@ -397,10 +397,10 @@ const deleteGroup = async (req, res) => {
   if (!group||isPresenting||!checkPermission) {
     return res.status(405).send('You are not allowed to access this');
   }
-  await Group.updateOne(
+  console.log(await Group.updateOne(
     { id: groupId },
     { is_deleted: true }
-  );
+  ))
 
   return res.send({ group });
 };

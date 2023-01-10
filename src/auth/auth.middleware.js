@@ -23,7 +23,7 @@ const isAuth = async (req, res, next) => {
   if (!verified) {
     return res.status(401).send("Your access token cannot verify");
   }
-  let user = await User.findOne({ email: 'tranxuana2803@gmail.com' });
+  let user = await User.findOne({ email: verified.payload.email });
   if (user?.password) {
     delete user.password;
   }
