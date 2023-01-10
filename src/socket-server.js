@@ -203,7 +203,6 @@ const socketSetup = (httpServer) => {
           } else {
             await chatMethod.add(id, presentationId, username, message);
             const newChat = await chatMethod.getAllChat(id, presentationId);
-            console.log("newChat ", newChat);
             io.in(id).emit("user-adding-message-chat", {
               status: 200,
               data: { newChat },
@@ -226,25 +225,25 @@ const socketSetup = (httpServer) => {
           );
           if (!present) {
             io.in(id).emit("user-adding-question", {
-              status: "error",
+              status: 400,
               message: "Present not found",
             });
           } else {
-            const question = await questionMethod.add(
+            await questionMethod.add(id, presentationId, username, content);
+            const newQuestion = await questionMethod.getAllQuestion(
               id,
-              presentationId,
-              username,
-              content
+              presentationId
             );
+            console.log("newQuestion ", newQuestion);
             io.in(id).emit("user-adding-question", {
-              status: "sucess",
-              data: { question },
+              status: 200,
+              data: { newQuestion },
             });
           }
         } catch (err) {
           console.error(err);
           io.in(id).emit("user-adding-question", {
-            status: "error",
+            status: 400,
             message: err.message,
           });
         }
