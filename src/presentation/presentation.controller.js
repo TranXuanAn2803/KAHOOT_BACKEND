@@ -453,7 +453,10 @@ const getPresentingRole = async (req, res) => {
         const checkPermission =
           (await _isCoOwner(user, groupPresent.group_id)) ||
           (await _isOwner(user, groupPresent.group_id));
-        if (!groupPresent || !checkPermission) {
+          console.log("checkPermission: ",await _isCoOwner(user, groupPresent.group_id))
+          console.log("checkPermission: ",await _isOwner(user, groupPresent.group_id))
+
+          if (!groupPresent || !checkPermission) {
           return res.status(200).send({ data: { role: "user" } });
         }
         return res.status(200).send({ data: { role: "admin" } });

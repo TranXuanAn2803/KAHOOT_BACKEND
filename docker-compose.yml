@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  backend:
+    container_name: kahoot-backend
+    build:
+      context: .
+      dockerfile: dockerfile.dev
+    ports:
+      - '5000:5000'
+    environment:
+      PORT: '${PORT}'

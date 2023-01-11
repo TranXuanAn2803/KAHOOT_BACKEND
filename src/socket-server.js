@@ -346,7 +346,7 @@ const socketSetup = (httpServer) => {
               message: "Present not found",
             });
           } else {
-            await addUserAnswer(username, options);
+            await addUserAnswer(username, options, id);
             const slideId = await getSlideByOptionId(options);
             let total = await getTotalAnswerBySlide(slideId, id);
             console.log(
