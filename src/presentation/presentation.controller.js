@@ -332,14 +332,13 @@ const checkJoinPresentingPermission = async (id, groupId, user) => {
             _id: groupId,
           });
         }
-        console.log("group 1", group);
+        console.log(group);
+
         if (!group) return false;
         const userGroup = await UserGroup.find({
-          group_id: groupId,
-          user_id: user.id,
-          is_deleted: false,
+          group_id: group.id,
         });
-        console.log("group 2", userGroup);
+        console.log("userGroup=", userGroup);
         if (!userGroup || userGroup.length == 0) {
           return false;
         }
@@ -499,6 +498,7 @@ const checkPermissionPresenting = async (presentationId, sessionId, user) => {
           presentation_id: presentationId,
           current_session: sessionId,
         }).lean();
+        console.log("groupPresent", groupPresent);
         const checkPermission =
           (await _isCoOwner(user, groupPresent.group_id)) ||
           (await _isOwner(user, groupPresent.group_id));
@@ -785,6 +785,7 @@ const toggleStatus = async (req, res) => {
                 .status(400)
                 .send("You cannot access presentation in status " + oldStatus);
             }
+            console.log(groupPresent);
             await GroupPresentation.updateOne(
               { group_id: groupId, presentation_id: id },
               { current_session: "", current_slide: 0 }
