@@ -336,6 +336,8 @@ const checkJoinPresentingPermission = async (id, groupId, user) => {
         if (!group) return false;
         const userGroup = await UserGroup.find({
           group_id: group.id,
+          user_id: user.id,
+          is_deleted: false,
         });
         console.log('userGroup=', userGroup)
         if (!userGroup || userGroup.length == 0) {
