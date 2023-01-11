@@ -316,6 +316,7 @@ const checkJoinPresentingPermission = async (id, groupId, user) => {
     const presentation = await Presentation.findOne({
       _id: id,
     });
+    console.log("checkJoinPresentingPermission ", presentation);
     if (!presentation || !presentation.status) return null;
 
     switch (presentation.status) {
@@ -331,12 +332,14 @@ const checkJoinPresentingPermission = async (id, groupId, user) => {
             _id: groupId,
           });
         }
+        console.log("group 1", group);
         if (!group) return false;
         const userGroup = await UserGroup.find({
-          group_id: group._id,
+          group_id: groupId,
           user_id: user.id,
           is_deleted: false,
         });
+        console.log("group 2", userGroup);
         if (!userGroup || userGroup.length == 0) {
           return false;
         }
@@ -453,10 +456,16 @@ const getPresentingRole = async (req, res) => {
         const checkPermission =
           (await _isCoOwner(user, groupPresent.group_id)) ||
           (await _isOwner(user, groupPresent.group_id));
-          console.log("checkPermission: ",await _isCoOwner(user, groupPresent.group_id))
-          console.log("checkPermission: ",await _isOwner(user, groupPresent.group_id))
+        console.log(
+          "checkPermission: ",
+          await _isCoOwner(user, groupPresent.group_id)
+        );
+        console.log(
+          "checkPermission: ",
+          await _isOwner(user, groupPresent.group_id)
+        );
 
-          if (!groupPresent || !checkPermission) {
+        if (!groupPresent || !checkPermission) {
           return res.status(200).send({ data: { role: "user" } });
         }
         return res.status(200).send({ data: { role: "admin" } });
@@ -747,6 +756,7 @@ const toggleStatus = async (req, res) => {
   let { status, groupId } = req.body;
   if (status) status = Math.max(Math.min(status, 3), 0);
   const oldStatus = presentation.status;
+  console.log("toggleStatus ", user, id, presentation, status, oldStatus);
   let newSessions = uuidv4();
   try {
     switch (status) {
@@ -938,10 +948,12 @@ const getSessionMethod = async (id, groupId) => {
 
     switch (presentation.status) {
       case 2: {
+        console.log("vao case 2");
         const groupPresent = await GroupPresentation.findOne({
           group_id: groupId,
           presentation_id: id,
         }).lean();
+        console.log("grouPresent find ", groupPresent);
         await GroupPresentation.findOne({
           group_id: groupId,
           presentation_id: id,
