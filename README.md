@@ -4,7 +4,7 @@
 ## Table of Contents
 * [General Info](#general-information)
 * [Video demo](#video-demo)
-* [Team infor](#general-information)
+* [Team infor](#team-information)
 * [Technologies Used](#technologies-used)
 * [Features](#features)
 
