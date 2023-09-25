@@ -25,6 +25,8 @@
 ## Technologies Used
 - Frontend: ReactJs, Ant Design
 - Backend: NodeJs, ExpressJs, Sequelize, socket.io
+- Task Management: Jira
+
 ## Features
 .No | Feature
 ------------ | -------------
