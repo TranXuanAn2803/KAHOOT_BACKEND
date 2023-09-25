@@ -4,6 +4,7 @@
 ## Table of Contents
 * [General Info](#general-information)
 * [Video demo](#video-demo)
+* [Team infor](#general-information)
 * [Technologies Used](#technologies-used)
 * [Features](#features)
 
@@ -21,7 +22,12 @@
 ## Video Demo
 [click here](https://drive.google.com/file/d/1pl4s71rnL7HXt1zR-63X-U7ghihVDsIV/view?usp=share_link)
 <!-- If you have screenshots you'd like to share, include them here. -->
-
+## Team Information
+MSSV | Tên
+------------ | -------------
+19120540 | Nguyễn Tuấn Khanh
+19120047 | Trần Xuân An
+19120588 | Phạm Duy Minh
 ## Technologies Used
 - Frontend: ReactJs, Ant Design
 - Backend: NodeJs, ExpressJs, Sequelize, socket.io
