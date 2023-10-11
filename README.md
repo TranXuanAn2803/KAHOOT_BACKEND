@@ -88,7 +88,7 @@ MSSV | Tên
 + Chạy front-end và back-end bằng: "npm start".
 
 ## Database design
-![image](https://github.com/TranXuanAn2803/KAHOOT_BACKEND/assets/87705737/82753725-9d5e-4f48-b90f-162e13e64e4a)
+![image](https://github.com/TranXuanAn2803/KAHOOT_BACKEND/blob/main/database-er.png)
 
 
 
